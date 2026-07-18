@@ -1,0 +1,643 @@
+/* ==========================================================================
+   FICHA UNIVERSAL — BLACK HOLE CLUB
+   Reprodução fiel da ficha em PDF/imagens de referência.
+   Medidas extraídas por análise de pixels do documento original
+   (referência: página A4/Letter renderizada a 1700×2200px).
+   ========================================================================== */
+
+:root {
+  /* ---- Cores extraídas por amostragem de pixel do PDF original ---- */
+  --c-bg:            #000000;
+  --c-text:          #FFFFFF;
+  --c-stripe:        #A6A6A6; /* fundo cinza das linhas alternadas (Saúde/Sanidade) */
+  --c-vida:          #CC0000;
+  --c-sanidade:      #561269;
+  --c-forca:         #CC7A00;
+  --c-flag-light:    #D9DEEB;
+  --c-flag-red:      #FF3131;
+  --c-flag-navy:     #1800AD;
+  --c-placeholder:   #A4A8B3;
+
+  /* ---- Fontes identificadas nos metadados do PDF ----
+     Open Sans (regular/bold), Sorts Mill Goudy (serifada), IBM Plex Sans Condensed (bold) */
+  --f-sans:      'Open Sans', Arial, sans-serif;
+  --f-serif:     'Sorts Mill Goudy', Georgia, serif;
+  --f-display:   'IBM Plex Sans Condensed', 'Open Sans', Arial, sans-serif;
+
+  /* ---- Página A4 ---- */
+  --page-w: 210mm;
+  --page-h: 297mm;
+  --margin-x: 10.3mm;    /* ~4.9% da largura, medido no original */
+
+  --fs-base: 3.15mm;
+}
+
+/* ==========================================================================
+   RESET & BASE
+   ========================================================================== */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #4b4b4b;
+  color: var(--c-text);
+  font-family: var(--f-sans);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+}
+[contenteditable="true"]:hover,
+[contenteditable="true"]:focus {
+  background: rgba(255,255,255,0.08);
+}
+
+input[type="text"] {
+  font-family: inherit;
+  color: var(--c-text);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+}
+input[type="text"]:hover,
+input[type="text"]:focus {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ==========================================================================
+   BARRA DE FERRAMENTAS (tela apenas)
+   ========================================================================== */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  font-family: var(--f-sans);
+}
+.toolbar-title { font-weight: 700; letter-spacing: .02em; font-size: 14px; }
+.toolbar-actions { display: flex; align-items: center; gap: 10px; }
+.toolbar-actions button {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+.toolbar-actions button:hover { background: #3a3a3a; }
+#btnReset:hover { background: #5a1f1f; border-color: #a33; }
+.save-indicator {
+  font-size: 12px;
+  color: #8fd18f;
+  opacity: 0;
+  transition: opacity .4s;
+  min-width: 90px;
+}
+.save-indicator.show { opacity: 1; }
+
+/* ==========================================================================
+   ESTRUTURA GERAL DAS PÁGINAS
+   ========================================================================== */
+.sheet-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 12px 60px;
+}
+
+.page {
+  position: relative;
+  width: var(--page-w);
+  min-height: var(--page-h);
+  background: var(--c-bg);
+  color: var(--c-text);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.6);
+  padding: 8mm var(--margin-x) 10mm;
+  font-size: var(--fs-base);
+}
+
+/* ==========================================================================
+   TÍTULOS DE SEÇÃO
+   ========================================================================== */
+.section-title {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 8.2mm;
+  text-align: center;
+  margin: 7mm 0 4mm;
+}
+.section-title-serif {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 6.6mm;
+  margin: 0 0 3mm;
+}
+.subsection-title {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 5mm;
+  margin: 0 0 2.5mm;
+}
+.subsection-title-serif {
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 6mm;
+  margin: 6mm 0 3mm;
+}
+.mini-heading {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 4.3mm;
+  text-align: center;
+  margin: 0 0 2mm;
+}
+
+/* ==========================================================================
+   CABEÇALHO: RETRATO | LOGOTIPO | SAÚDE-SANIDADE
+   Três colunas fluem lado a lado, cada uma com sua própria altura —
+   por isso são independentes (grid) e não uma soma de blocos empilhados.
+   ========================================================================== */
+.header-grid {
+  display: grid;
+  grid-template-columns: 29% 1fr 32.5%;
+  column-gap: 2%;
+  align-items: start;
+  margin-bottom: 5mm;
+}
+.col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+}
+.col-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2mm;
+}
+
+/* ---- Retrato + bandeira ---- */
+.portrait-module {
+  display: flex;
+  align-items: center;
+  height: 25.9mm;
+  flex: none;
+}
+.portrait-circle {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 25.9mm;
+  height: 25.9mm;
+  border-radius: 50%;
+  background: var(--c-flag-light);
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  display: block;
+}
+.portrait-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.portrait-img[src]:not([src=""]) { display: block; }
+.portrait-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--c-placeholder);
+}
+.portrait-circle.has-photo .portrait-placeholder {
+  display: none;
+}
+.portrait-flag {
+  flex: 1;
+  height: 20.1mm;
+  margin-left: -12.95mm;
+  padding-left: 12.95mm;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.flag-name {
+  flex: 54;
+  background: var(--c-flag-light);
+  color: #14141a;
+  border: none;
+  padding: 0 3mm;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 4mm;
+}
+.flag-name::placeholder { color: #14141a; opacity: .55; }
+.flag-name:hover, .flag-name:focus { background: var(--c-flag-light); }
+.flag-stat {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+.flag-stat-vida     { flex: 27; }
+.flag-stat-sanidade { flex: 19; }
+.flag-stat-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  transition: width .2s ease;
+}
+.flag-stat-vida .flag-stat-fill     { background: var(--c-vida); }
+.flag-stat-sanidade .flag-stat-fill { background: var(--c-sanidade); }
+
+/* ---- Logotipo (dado d20 com emblema) ---- */
+.logo-module {
+  position: relative;
+  width: 42mm;
+  margin: 0 auto;
+  aspect-ratio: 200 / 230;
+}
+.dice-logo {
+  width: 100%;
+  height: 100%;
+}
+.dice-outline {
+  fill: #FFFFFF;
+  stroke: #000000;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.dice-facet {
+  fill: none;
+  stroke: #000000;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+/* ---- Saúde / Sanidade ---- */
+.status-tables { font-family: var(--f-serif); }
+.status-heading {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 5.6mm;
+  text-align: center;
+  margin: 0 0 1mm;
+}
+#statusBlock-sanidade { margin-top: 2mm; }
+.status-rows { display: flex; flex-direction: column; }
+.status-row {
+  display: flex;
+  align-items: center;
+  height: 5.4mm;
+  padding: 0 1mm;
+  cursor: pointer;
+}
+.status-row.stripe { background: var(--c-stripe); }
+.status-label { flex: 1; font-size: 4mm; line-height: 1; }
+.status-mod {
+  font-size: 3mm;
+  width: 4mm;
+  text-align: center;
+  font-style: italic;
+  margin-right: 1.5mm;
+}
+.status-check {
+  width: 3.6mm;
+  height: 3.6mm;
+  border: .45mm solid var(--c-text);
+  flex: none;
+  background: transparent;
+}
+.status-row.checked .status-check { background: var(--c-text); }
+
+/* ==========================================================================
+   BARRAS: VIDA / SANIDADE / FORÇA DE VONTADE
+   ========================================================================== */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2.6mm;
+}
+.bar-label {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 3.4mm;
+  text-align: center;
+  margin-bottom: .8mm;
+}
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 7.1mm;
+  border-radius: 3.6mm;
+  padding: 0 2.5mm;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  border: .3mm solid rgba(255, 255, 255, 0.5);
+}
+.bar-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  transition: width .2s ease;
+}
+.bar-vida     .bar-fill { background: var(--c-vida); }
+.bar-sanidade .bar-fill { background: var(--c-sanidade); }
+.bar-forca    .bar-fill { background: var(--c-forca); }
+.bar-arrow {
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+  color: var(--c-text);
+  font-size: 3.4mm;
+  line-height: 1;
+  padding: 1mm;
+}
+.bar-value {
+  position: relative;
+  z-index: 1;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 4mm;
+}
+.bar-value span { padding: 0 .3mm; }
+
+/* ==========================================================================
+   DEFESA / DESLOCAMENTO
+   ========================================================================== */
+.center-stats {
+  width: 50mm;
+  text-align: center;
+}
+.shield-wrap {
+  position: relative;
+  width: 24mm;
+  margin: 0 auto 5mm;
+}
+.shield-icon {
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: var(--c-text);
+  stroke-width: 3;
+}
+.defesa-value {
+  position: absolute;
+  left: 0; right: 0;
+  top: 40%;
+  font-family: var(--f-sans);
+  font-weight: 800;
+  font-size: 7mm;
+}
+.deslocamento-box {
+  border: .5mm solid var(--c-text);
+  border-radius: 3mm;
+  padding: 2mm;
+  font-family: var(--f-sans);
+  font-weight: 800;
+  font-size: 5.6mm;
+}
+
+/* ==========================================================================
+   ATRIBUTOS / HABILIDADES — grade de listas com pontos
+   ========================================================================== */
+.attributes-grid, .skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 4mm;
+}
+.attr-column-heading, .skill-column-heading {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 5.6mm;
+  text-align: center;
+  margin: 0 0 2.5mm;
+}
+.trait-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.2mm;
+  height: 5.6mm;
+}
+.trait-label {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 3.6mm;
+  white-space: nowrap;
+  outline: none;
+}
+.trait-fill {
+  flex: 1;
+  border-bottom: .35mm solid var(--c-text);
+  height: 0;
+  align-self: center;
+  min-width: 3mm;
+}
+.dots {
+  display: flex;
+  gap: 1mm;
+  flex: none;
+}
+.dot {
+  width: 3.1mm;
+  height: 3.1mm;
+  border-radius: 50%;
+  border: .38mm solid var(--c-text);
+  background: transparent;
+  padding: 0;
+  display: block;
+}
+.dot.filled { background: var(--c-text); }
+
+/* ==========================================================================
+   PÁGINA 2 — estrutura em grade 2×2
+   ========================================================================== */
+#page2 {
+  display: grid;
+  grid-template-columns: 47% 47%;
+  column-gap: 6%;
+  grid-template-rows: auto auto;
+  align-content: start;
+}
+.p2-col-left  { grid-column: 1; grid-row: 1; }
+.p2-col-right { grid-column: 2; grid-row: 1; }
+.p2-bottom-left  { grid-column: 1; grid-row: 2; margin-top: 6mm; }
+.p2-bottom-right { grid-column: 2; grid-row: 2; margin-top: 6mm; align-self: end; }
+
+/* ---- Linhas em branco (Outras características / Antecedentes) ---- */
+.blank-rows { margin-bottom: 5mm; }
+.blank-row {
+  display: flex;
+  align-items: center;
+  gap: 1.6mm;
+  height: 5.6mm;
+}
+.blank-row input[type="text"] {
+  flex: 1;
+  border-bottom: .35mm solid var(--c-text);
+  font-size: 3.6mm;
+  height: 4.6mm;
+}
+
+/* ---- Tabela de Inventário ---- */
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 2mm;
+}
+.inventory-table th {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 3.6mm;
+  text-align: left;
+  border: .3mm solid var(--c-text);
+  padding: 1.4mm 1.6mm;
+}
+.inventory-table td {
+  border: .3mm solid var(--c-text);
+  height: 8.4mm;
+  padding: 0;
+}
+.inventory-table td input[type="text"] {
+  height: 100%;
+  padding: 0 1.6mm;
+  font-size: 3.4mm;
+}
+.col-item     { width: 16.6%; }
+.col-categoria{ width: 27.7%; }
+.col-qtd      { width: 14.5%; }
+.col-tamanho  { width: 26.1%; }
+.col-obs      { width: 15.1%; }
+
+/* ---- Qualidades & Defeitos ---- */
+.qd-table { margin-bottom: 4mm; }
+.qd-headers {
+  display: grid;
+  grid-template-columns: 46% 25% 29%;
+  font-family: var(--f-serif);
+  font-size: 4.6mm;
+  margin-bottom: 2mm;
+}
+.qd-headers .qd-h-tipo, .qd-headers .qd-h-custo { text-align: center; }
+.qd-row {
+  display: grid;
+  grid-template-columns: 46% 25% 29%;
+  column-gap: 2%;
+  height: 5.4mm;
+  align-items: end;
+}
+.qd-row input[type="text"] {
+  border-bottom: .35mm solid var(--c-text);
+  font-size: 3.4mm;
+  height: 4.4mm;
+  text-align: center;
+}
+.qd-row input.qd-nome { text-align: left; }
+
+/* ---- Armamento + Armadura (grade única de 2×2, 4ª célula = Armadura) ---- */
+.weapons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 5%;
+  row-gap: 4mm;
+}
+.weapon-field, .desc-field {
+  display: flex;
+  align-items: baseline;
+  gap: 1mm;
+  height: 5.2mm;
+}
+.weapon-field .wf-label, .desc-field .wf-label {
+  font-family: var(--f-sans);
+  font-size: 3.6mm;
+  white-space: nowrap;
+}
+.weapon-field input[type="text"], .desc-field input[type="text"] {
+  border-bottom: .35mm solid var(--c-text);
+  font-size: 3.4mm;
+  height: 4.4mm;
+}
+input.weapon-extra-line {
+  display: block;
+  width: 100%;
+  border-bottom: .35mm solid var(--c-text);
+  height: 4.6mm;
+  margin-bottom: .6mm;
+}
+
+/* ---- Armadura (4ª célula da grade de Armamento) ---- */
+.armadura-heading { text-align: right; margin: 0 0 2mm; }
+.armor-block { display: flex; flex-direction: column; align-items: flex-end; }
+.armor-block .weapon-field { width: 78%; }
+
+/* ---- Description ---- */
+.description-fields { display: flex; flex-direction: column; }
+
+/* ---- Retrato inferior (moldura arredondada) ---- */
+.portrait-frame {
+  position: relative;
+  width: 87.8mm;
+  height: 33.8mm;
+  border: .6mm solid var(--c-text);
+  border-radius: 7mm;
+  background: transparent;
+  overflow: hidden;
+  padding: 0;
+  display: block;
+}
+
+/* ==========================================================================
+   IMPRESSÃO
+   ========================================================================== */
+@media print {
+  html, body { background: #fff; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  .no-print { display: none !important; }
+  .sheet-wrapper { gap: 0; padding: 0; }
+  .page {
+    box-shadow: none;
+    margin: 0;
+    width: 210mm;
+    min-height: 297mm;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVO — apenas permite zoom/scroll horizontal, layout não muda
+   ========================================================================== */
+@media (max-width: 210mm) {
+  .sheet-wrapper { align-items: flex-start; overflow-x: auto; }
+}

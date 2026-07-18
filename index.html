@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+<title>Ficha Universal — Black Hole Club</title>
+
+<!-- Fontes originais identificadas nos metadados do PDF de referência -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=Open+Sans:wght@400;600;700;800&family=Sorts+Mill+Goudy&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Barra de ferramentas fixa (não aparece na impressão) -->
+<div class="toolbar no-print">
+  <span class="toolbar-title">Ficha Universal · Black Hole Club</span>
+  <div class="toolbar-actions">
+    <button id="btnPrint" type="button">Imprimir / Salvar PDF</button>
+    <button id="btnReset" type="button">Limpar ficha</button>
+    <span id="saveIndicator" class="save-indicator" aria-live="polite"></span>
+  </div>
+</div>
+
+<div class="sheet-wrapper">
+
+  <!-- ======================= PÁGINA 1 ======================= -->
+  <section class="page" id="page1" aria-label="Ficha - Página 1">
+
+    <!-- Cabeçalho: 3 colunas independentes que fluem lado a lado —
+         (retrato→barras) | (logotipo→defesa/deslocamento) | (saúde/sanidade) -->
+    <div class="header-grid">
+
+      <div class="col-left">
+        <div class="portrait-module">
+          <button class="portrait-circle" id="portraitBtn-main" type="button" aria-label="Enviar retrato do personagem" data-portrait="main">
+            <img class="portrait-img" id="portraitImg-main" alt="">
+            <svg class="portrait-placeholder" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="38" r="16"/>
+              <path d="M18 92c0-20 14-34 32-34s32 14 32 34z"/>
+            </svg>
+          </button>
+          <input class="portrait-input" id="portraitInput-main" type="file" accept="image/*" hidden>
+          <div class="portrait-flag">
+            <input type="text" class="flag-name" data-key="nome-personagem" placeholder="Nome do personagem" aria-label="Nome do personagem">
+            <div class="flag-stat flag-stat-vida" aria-hidden="true"><div class="flag-stat-fill"></div></div>
+            <div class="flag-stat flag-stat-sanidade" aria-hidden="true"><div class="flag-stat-fill"></div></div>
+          </div>
+        </div>
+
+        <!-- Barras de Vida, Sanidade e Força de Vontade -->
+        <div class="bars">
+          <div class="bar-group" data-bar="vida">
+            <div class="bar-label">VIDA</div>
+            <div class="bar bar-vida">
+              <div class="bar-fill"></div>
+              <button class="bar-arrow bar-arrow-left" type="button" aria-label="Diminuir Vida">&#10094;</button>
+              <div class="bar-value"><span class="bar-current" contenteditable="true" inputmode="numeric"></span>/<span class="bar-max" contenteditable="true" inputmode="numeric"></span></div>
+              <button class="bar-arrow bar-arrow-right" type="button" aria-label="Aumentar Vida">&#10095;</button>
+            </div>
+          </div>
+          <div class="bar-group" data-bar="sanidade">
+            <div class="bar-label">SANIDADE</div>
+            <div class="bar bar-sanidade">
+              <div class="bar-fill"></div>
+              <button class="bar-arrow bar-arrow-left" type="button" aria-label="Diminuir Sanidade">&#10094;</button>
+              <div class="bar-value"><span class="bar-current" contenteditable="true" inputmode="numeric"></span>/<span class="bar-max" contenteditable="true" inputmode="numeric"></span></div>
+              <button class="bar-arrow bar-arrow-right" type="button" aria-label="Aumentar Sanidade">&#10095;</button>
+            </div>
+          </div>
+          <div class="bar-group" data-bar="forca">
+            <div class="bar-label">FORÇA DE VONTADE</div>
+            <div class="bar bar-forca">
+              <div class="bar-fill"></div>
+              <button class="bar-arrow bar-arrow-left" type="button" aria-label="Diminuir Força de Vontade">&#10094;</button>
+              <div class="bar-value"><span class="bar-current" contenteditable="true" inputmode="numeric"></span>/<span class="bar-max" contenteditable="true" inputmode="numeric"></span></div>
+              <button class="bar-arrow bar-arrow-right" type="button" aria-label="Aumentar Força de Vontade">&#10095;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-center">
+        <div class="logo-module" aria-hidden="true">
+          <svg class="dice-logo" viewBox="0 0 200 230">
+            <polygon class="dice-outline" points="100,10 174,80 174,155 100,220 26,155 26,80"/>
+            <polyline class="dice-facet" points="100,10 26,155"/>
+            <polyline class="dice-facet" points="100,10 174,155"/>
+            <polyline class="dice-facet" points="100,220 26,80"/>
+            <polyline class="dice-facet" points="100,220 174,80"/>
+            <image href="data:image/png;base64,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" x="64" y="91.5" width="72" height="47"/>
+          </svg>
+        </div>
+
+        <!-- Defesa e Deslocamento -->
+        <div class="center-stats">
+          <div class="defesa-block">
+            <h3 class="mini-heading">Defesa</h3>
+            <div class="shield-wrap">
+              <svg class="shield-icon" viewBox="0 0 100 112" aria-hidden="true">
+                <path d="M50 2 L94 18 V56 C94 84 74 100 50 110 C26 100 6 84 6 56 V18 Z"/>
+              </svg>
+              <div class="defesa-value" data-key="defesa-valor" contenteditable="true" inputmode="numeric"></div>
+            </div>
+          </div>
+          <div class="deslocamento-block">
+            <h3 class="mini-heading">Deslocamento</h3>
+            <div class="deslocamento-box" data-key="deslocamento-valor" contenteditable="true"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="status-tables">
+          <div class="status-block" id="statusBlock-saude">
+            <h3 class="status-heading">Saude</h3>
+            <div class="status-rows" data-group="saude"></div>
+          </div>
+          <div class="status-block" id="statusBlock-sanidade">
+            <h3 class="status-heading">Sanidade</h3>
+            <div class="status-rows" data-group="sanidade"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Atributos -->
+    <h2 class="section-title">Atributos</h2>
+    <div class="attributes-grid" id="attributesGrid"></div>
+
+    <!-- Habilidades -->
+    <h2 class="section-title">Habilidades</h2>
+    <div class="skills-grid" id="skillsGrid"></div>
+
+  </section>
+
+  <!-- ======================= PÁGINA 2 ======================= -->
+  <section class="page" id="page2" aria-label="Ficha - Página 2">
+
+    <div class="p2-col-left">
+      <h3 class="subsection-title">Outras caracteristicas</h3>
+      <div class="blank-rows" id="outrasRows" data-rows="7"></div>
+
+      <h3 class="subsection-title">Antecedentes</h3>
+      <div class="blank-rows" id="antecedentesRows" data-rows="6"></div>
+
+      <h2 class="section-title-serif">Inventario</h2>
+      <table class="inventory-table" id="inventoryTable">
+        <thead>
+          <tr>
+            <th class="col-item">Item</th>
+            <th class="col-categoria">Categoria</th>
+            <th class="col-qtd">Qtd</th>
+            <th class="col-tamanho">Tamanho</th>
+            <th class="col-obs">Obs</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryBody"></tbody>
+      </table>
+    </div>
+
+    <div class="p2-col-right">
+      <h2 class="section-title">Qualidades &amp; Defeitos</h2>
+
+      <div class="qd-table">
+        <div class="qd-headers">
+          <span class="qd-h-nome">Qualidades</span>
+          <span class="qd-h-tipo">Tipo</span>
+          <span class="qd-h-custo">Custo</span>
+        </div>
+        <div class="qd-rows" id="qualidadesRows" data-rows="4"></div>
+      </div>
+
+      <div class="qd-table">
+        <div class="qd-headers">
+          <span class="qd-h-nome">Defeitos</span>
+          <span class="qd-h-tipo">Tipo</span>
+          <span class="qd-h-custo">Custo</span>
+        </div>
+        <div class="qd-rows" id="defeitosRows" data-rows="4"></div>
+      </div>
+
+      <h3 class="subsection-title-serif">Armamento</h3>
+      <!-- Grade 2×2: 3 blocos de arma + o bloco de armadura, na mesma grade,
+           reproduzindo o alinhamento por linha do documento original. -->
+      <div class="weapons-grid" id="weaponsGrid"></div>
+    </div>
+
+    <div class="p2-bottom-left">
+      <h2 class="section-title-serif">Description</h2>
+      <div class="description-fields" id="descriptionFields"></div>
+    </div>
+
+    <div class="p2-bottom-right">
+      <button class="portrait-frame" id="portraitBtn-full" type="button" aria-label="Enviar retrato adicional" data-portrait="full">
+        <img class="portrait-img" id="portraitImg-full" alt="">
+      </button>
+      <input class="portrait-input" id="portraitInput-full" type="file" accept="image/*" hidden>
+    </div>
+
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
