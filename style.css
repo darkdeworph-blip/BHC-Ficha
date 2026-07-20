@@ -276,21 +276,10 @@ input[type="text"]:focus {
   margin: 0 auto;
   aspect-ratio: 200 / 230;
 }
-.dice-logo {
+.dice-logo-img {
   width: 100%;
-  height: 100%;
-}
-.dice-outline {
-  fill: #FFFFFF;
-  stroke: #000000;
-  stroke-width: 5;
-  stroke-linejoin: round;
-}
-.dice-facet {
-  fill: none;
-  stroke: #000000;
-  stroke-width: 3;
-  stroke-linejoin: round;
+  height: auto;
+  display: block;
 }
 
 /* ---- Saúde / Sanidade ---- */
@@ -385,40 +374,130 @@ input[type="text"]:focus {
 .bar-value span { padding: 0 .3mm; }
 
 /* ==========================================================================
-   DEFESA / DESLOCAMENTO
+   DEFESA / DESLOCAMENTO — agora em linha, abaixo das barras (col-left)
    ========================================================================== */
-.center-stats {
-  width: 50mm;
-  text-align: center;
+.stats-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4mm;
+  margin-top: 2.5mm;
 }
+.defesa-block { text-align: center; }
 .shield-wrap {
   position: relative;
-  width: 24mm;
-  margin: 0 auto 5mm;
+  width: 14mm;
+  margin: 0 auto;
 }
 .shield-icon {
   width: 100%;
   height: auto;
   fill: none;
   stroke: var(--c-text);
-  stroke-width: 3;
+  stroke-width: 4;
 }
 .defesa-value {
   position: absolute;
   left: 0; right: 0;
-  top: 40%;
+  top: 38%;
   font-family: var(--f-sans);
   font-weight: 800;
-  font-size: 7mm;
+  font-size: 4mm;
 }
+.deslocamento-block { text-align: center; }
 .deslocamento-box {
   border: .5mm solid var(--c-text);
-  border-radius: 3mm;
-  padding: 2mm;
+  border-radius: 2.4mm;
+  padding: 1.4mm 2.5mm;
   font-family: var(--f-sans);
   font-weight: 800;
-  font-size: 5.6mm;
+  font-size: 4.4mm;
+  white-space: nowrap;
 }
+
+/* ==========================================================================
+   DADO CLICÁVEL + CAIXA DE RESULTADOS DA ROLAGEM
+   (ocupa o espaço que Defesa/Deslocamento usavam antes, abaixo do dado)
+   ========================================================================== */
+.dice-roll-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform .12s ease;
+}
+.dice-roll-btn:hover { transform: scale(1.03); }
+.dice-roll-btn:active { transform: scale(0.97); }
+
+.roll-panel {
+  width: 70.8mm;
+  min-height: 33.5mm;
+  margin: 4mm auto 0;
+  border: .5mm solid var(--c-text);
+  border-radius: 6mm;
+  padding: 3mm 4mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+.roll-mode-toggle {
+  display: flex;
+  gap: 2mm;
+  justify-content: center;
+}
+.roll-mode-btn {
+  background: transparent;
+  border: .35mm solid var(--c-text);
+  border-radius: 4mm;
+  color: var(--c-text);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 3mm;
+  padding: 1mm 3mm;
+}
+.roll-mode-btn.active {
+  background: var(--c-text);
+  color: #000;
+}
+.roll-result {
+  flex: 1;
+  font-family: var(--f-sans);
+  font-size: 3.1mm;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+.roll-empty {
+  text-align: center;
+  opacity: .6;
+  margin: auto;
+}
+.roll-line { display: flex; justify-content: space-between; gap: 2mm; }
+.roll-line strong { font-weight: 700; }
+.roll-dice-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1mm;
+  margin: 1mm 0;
+}
+.roll-die {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.5mm;
+  height: 5.5mm;
+  border: .3mm solid var(--c-text);
+  border-radius: 1mm;
+  font-size: 2.8mm;
+  font-weight: 700;
+}
+.roll-die.success { background: var(--c-text); color: #000; }
+.roll-die.crit { background: var(--c-vida); color: #fff; border-color: var(--c-vida); }
+.roll-final {
+  font-size: 4mm;
+  font-weight: 800;
+  text-align: center;
+  margin-top: .5mm;
+}
+.roll-quality { text-align: center; font-weight: 700; }
 
 /* ==========================================================================
    ATRIBUTOS / HABILIDADES — grade de listas com pontos
@@ -440,6 +519,16 @@ input[type="text"]:focus {
   align-items: baseline;
   gap: 1.2mm;
   height: 5.6mm;
+  cursor: pointer;
+  border-radius: 1.2mm;
+  padding: 0 1mm;
+  margin: 0 -1mm;
+  transition: background .12s ease;
+}
+.trait-row:hover { background: rgba(255,255,255,0.06); }
+.trait-row.selected {
+  background: rgba(255, 122, 0, 0.18);
+  box-shadow: inset 0 0 0 .35mm #ff7a00;
 }
 .trait-label {
   font-family: var(--f-sans);
