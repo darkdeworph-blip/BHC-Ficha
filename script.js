@@ -139,9 +139,11 @@ function buildStatusRows(container, states, group) {
 }
 
 /** Monta uma linha de atributo/habilidade: rótulo editável + linha + pontos. */
-function buildTraitRow(label, key) {
+function buildTraitRow(label, key, role) {
   const row = document.createElement('div');
   row.className = 'trait-row';
+  row.dataset.role = role; // 'attribute' ou 'skill' — usado pela rolagem de dados
+  row.dataset.rollKey = key;
 
   const labelEl = document.createElement('span');
   labelEl.className = 'trait-label';
@@ -155,6 +157,13 @@ function buildTraitRow(label, key) {
   const dots = createDots(`${key}-dots`);
 
   row.append(labelEl, fill, dots);
+
+  // Clique na linha (exceto nos pontos, que têm seu próprio clique) seleciona para rolagem.
+  row.addEventListener('click', (e) => {
+    if (e.target.closest('.dots')) return; // clique nos pontos só ajusta o valor
+    selectTraitRow(row);
+  });
+
   return row;
 }
 
@@ -170,7 +179,7 @@ function buildAttributesGrid() {
     col.appendChild(heading);
 
     items.forEach((item) => {
-      col.appendChild(buildTraitRow(item, `attr-${slug(colName)}-${slug(item)}`));
+      col.appendChild(buildTraitRow(item, `attr-${slug(colName)}-${slug(item)}`, 'attribute'));
     });
 
     grid.appendChild(col);
@@ -189,7 +198,7 @@ function buildSkillsGrid() {
     col.appendChild(heading);
 
     items.forEach((item) => {
-      col.appendChild(buildTraitRow(item, `skill-${slug(colName)}-${slug(item)}`));
+      col.appendChild(buildTraitRow(item, `skill-${slug(colName)}-${slug(item)}`, 'skill'));
     });
 
     grid.appendChild(col);
@@ -408,6 +417,24 @@ function wireEnterBlurs() {
   });
 }
 
+/** Redimensiona uma imagem para um tamanho máximo e converte para JPEG,
+ *  evitando estourar o limite do LocalStorage com fotos grandes de celular. */
+function resizeImageToDataUrl(imgEl, maxSize) {
+  let { naturalWidth: width, naturalHeight: height } = imgEl;
+  if (width > height && width > maxSize) {
+    height = Math.round(height * (maxSize / width));
+    width = maxSize;
+  } else if (height >= width && height > maxSize) {
+    width = Math.round(width * (maxSize / height));
+    height = maxSize;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(imgEl, 0, 0, width, height);
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+
 /** Envio de retrato (upload de imagem) com ajuste automático via object-fit/cover. */
 function setupPortraitUpload(btnId, inputId, imgId) {
   const btn = document.getElementById(btnId);
@@ -421,11 +448,18 @@ function setupPortraitUpload(btnId, inputId, imgId) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      img.src = e.target.result;
-      btn.classList.add('has-photo');
-      saveState();
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        img.src = resizeImageToDataUrl(tempImg, 700);
+        btn.classList.add('has-photo');
+        saveState();
+      };
+      tempImg.onerror = () => alert('Não foi possível ler essa imagem. Tente outro arquivo.');
+      tempImg.src = e.target.result;
     };
     reader.readAsDataURL(file);
+    // Limpa o input para permitir selecionar o mesmo arquivo de novo, se preciso.
+    input.value = '';
   });
 }
 
@@ -560,8 +594,145 @@ function flashSaveIndicator() {
 }
 
 /* ==========================================================================
-   6) INICIALIZAÇÃO
+   5b) SISTEMA DE ROLAGEM — Modo Narrativo e Modo Clássico
    ========================================================================== */
+
+/** Regra de sucesso no d12 (definida pelo usuário):
+ *  1–6 nenhum sucesso · 7–11 = 1 sucesso · 12 = 2 sucessos (crítico). */
+function successesForDie(value) {
+  if (value === 12) return 2;
+  if (value >= 7) return 1;
+  return 0;
+}
+
+function qualityFromSuccesses(total) {
+  if (total <= 0) return 'Falha Crítica';
+  if (total <= 2) return 'Ruim';
+  if (total <= 4) return 'Normal';
+  if (total <= 6) return 'Bom';
+  if (total <= 8) return 'Excelente';
+  return 'Sucesso Extremo';
+}
+
+let rollMode = 'narrativo';
+
+/** Seleciona uma linha de Atributo ou Perícia (uma por tipo, clique de novo desmarca). */
+function selectTraitRow(row) {
+  const role = row.dataset.role;
+  const alreadySelected = row.classList.contains('selected');
+  document.querySelectorAll(`.trait-row[data-role="${role}"].selected`).forEach((r) => r.classList.remove('selected'));
+  if (!alreadySelected) row.classList.add('selected');
+  saveState();
+}
+
+/** Lê o Atributo ou Perícia atualmente selecionado (rótulo + valor dos pontos). */
+function getSelectedTrait(role) {
+  const row = document.querySelector(`.trait-row[data-role="${role}"].selected`);
+  if (!row) return null;
+  const label = row.querySelector('.trait-label').textContent.trim();
+  const dotsWrap = row.querySelector('.dots');
+  const value = parseInt(dotsWrap.dataset.value, 10) || 0;
+  return { label, value };
+}
+
+/** Penalidade cumulativa dos estados marcados em Saúde e Sanidade (número ≤ 0). */
+function getHealthPenalty() {
+  let total = 0;
+  const saude = document.querySelector('.status-row.checked[data-group="saude"]');
+  const sanidade = document.querySelector('.status-row.checked[data-group="sanidade"]');
+  [saude, sanidade].forEach((row) => {
+    if (!row) return;
+    const mod = row.querySelector('.status-mod').textContent.trim();
+    if (mod === '-') return;
+    total += parseInt(mod, 10) || 0;
+  });
+  return total; // 0 ou negativo
+}
+
+function rollD12() {
+  return 1 + Math.floor(Math.random() * 12);
+}
+
+function wireRollSystem() {
+  // Alternar modo Narrativo / Clássico — limpa só o resultado anterior.
+  document.querySelectorAll('.roll-mode-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.roll-mode-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      rollMode = btn.dataset.mode;
+      renderRollEmpty();
+    });
+  });
+
+  document.getElementById('diceRollBtn').addEventListener('click', performRoll);
+}
+
+function renderRollEmpty() {
+  document.getElementById('rollResult').innerHTML =
+    '<p class="roll-empty">Selecione um Atributo e uma Perícia e clique no dado.</p>';
+}
+
+function performRoll() {
+  const attr = getSelectedTrait('attribute');
+  const skill = getSelectedTrait('skill');
+  const box = document.getElementById('rollResult');
+
+  if (!attr || !skill) {
+    box.innerHTML = '<p class="roll-empty">Selecione um Atributo e uma Perícia e clique no dado.</p>';
+    return;
+  }
+
+  const penalty = getHealthPenalty();
+
+  if (rollMode === 'narrativo') {
+    renderNarrativo(attr, skill, penalty);
+  } else {
+    renderClassico(attr, skill, penalty);
+  }
+}
+
+function renderNarrativo(attr, skill, penalty) {
+  const initialPool = attr.value + skill.value;
+  const finalPool = Math.max(1, initialPool + penalty);
+  const rolls = Array.from({ length: finalPool }, rollD12);
+  const successes = rolls.reduce((sum, v) => sum + successesForDie(v), 0);
+  const quality = qualityFromSuccesses(successes);
+
+  const diceHtml = rolls
+    .map((v) => {
+      const cls = v === 12 ? 'roll-die crit' : successesForDie(v) > 0 ? 'roll-die success' : 'roll-die';
+      return `<span class="${cls}">${v}</span>`;
+    })
+    .join('');
+
+  document.getElementById('rollResult').innerHTML = `
+    <div class="roll-line"><span>Modo</span><strong>Narrativo</strong></div>
+    <div class="roll-line"><span>Atributo</span><strong>${attr.label} ${attr.value}</strong></div>
+    <div class="roll-line"><span>Perícia</span><strong>${skill.label} ${skill.value}</strong></div>
+    <div class="roll-line"><span>Reserva inicial</span><strong>${initialPool}d12</strong></div>
+    <div class="roll-line"><span>Penalidades</span><strong>${penalty}</strong></div>
+    <div class="roll-line"><span>Reserva final</span><strong>${finalPool}d12</strong></div>
+    <div class="roll-dice-values">${diceHtml}</div>
+    <div class="roll-final">Sucessos: ${successes}</div>
+    <div class="roll-quality">${quality}</div>
+  `;
+}
+
+function renderClassico(attr, skill, penalty) {
+  const natural = rollD12();
+  const subtotal = natural + attr.value + skill.value;
+  const final = subtotal + penalty;
+
+  document.getElementById('rollResult').innerHTML = `
+    <div class="roll-line"><span>Modo</span><strong>Clássico</strong></div>
+    <div class="roll-line"><span>d12 natural</span><strong>${natural}</strong></div>
+    <div class="roll-line"><span>Atributo</span><strong>${attr.label} ${attr.value}</strong></div>
+    <div class="roll-line"><span>Perícia</span><strong>${skill.label} ${skill.value}</strong></div>
+    <div class="roll-line"><span>Penalidades</span><strong>${penalty}</strong></div>
+    <div class="roll-final">Resultado final: ${final}</div>
+  `;
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   // Monta as seções repetitivas da ficha a partir dos dados.
@@ -587,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wirePortraits();
   wireToolbar();
   wireDelegatedInput();
+  wireRollSystem();
 
   // Restaura dados salvos (se existirem), sobrepondo os padrões.
   applyState(loadState());
