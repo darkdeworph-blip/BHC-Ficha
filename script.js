@@ -150,6 +150,9 @@ function buildTraitRow(label, key, role) {
   labelEl.contentEditable = 'true';
   labelEl.dataset.key = `${key}-label`;
   labelEl.textContent = label;
+  // Um clique simples só seleciona a linha; edição do nome exige duplo clique.
+  labelEl.addEventListener('mousedown', (e) => e.preventDefault());
+  labelEl.addEventListener('dblclick', () => labelEl.focus());
 
   const fill = document.createElement('span');
   fill.className = 'trait-fill';
@@ -614,6 +617,15 @@ function qualityFromSuccesses(total) {
   return 'Sucesso Extremo';
 }
 
+const QUALITY_CLASS = {
+  'Falha Crítica': 'q-critfail',
+  'Ruim': 'q-ruim',
+  'Normal': 'q-normal',
+  'Bom': 'q-bom',
+  'Excelente': 'q-excelente',
+  'Sucesso Extremo': 'q-extremo',
+};
+
 let rollMode = 'narrativo';
 
 /** Seleciona uma linha de Atributo ou Perícia (uma por tipo, clique de novo desmarca). */
@@ -714,7 +726,7 @@ function renderNarrativo(attr, skill, penalty) {
     <div class="roll-line"><span>Reserva final</span><strong>${finalPool}d12</strong></div>
     <div class="roll-dice-values">${diceHtml}</div>
     <div class="roll-final">Sucessos: ${successes}</div>
-    <div class="roll-quality">${quality}</div>
+    <div class="roll-quality ${QUALITY_CLASS[quality]}">${quality}</div>
   `;
 }
 
