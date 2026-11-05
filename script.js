@@ -31,13 +31,13 @@ const SANIDADE_STATES = [
 ];
 
 const ATTRIBUTES = {
-  'Fisicos': ['Força', 'Destreza', 'Estamina'],
+  'Fisicos': ['Força', 'Destreza', 'Vigor'],
   'Sociais': ['Carisma', 'Manipulação', 'Aparencia'],
   'Mentais': ['Percepção', 'Inteligencia', 'Raciocionio'],
 };
 
 const SKILLS = {
-  'Talentos': ['Alerta', 'Arte', 'Atletismo', 'Consciencia', 'Luta', 'Empatia', 'Expressão', 'Intimidação', 'Liderança', 'Manha', 'Lábia'],
+  'Talentos': ['Alerta', 'Arte', 'Atletismo', 'Consciencia', 'Luta', 'Empatia', 'Expressão', 'Intimidação', 'Instrução', 'Manha', 'Lábia'],
   'Pericias': ['Artesanato', 'Condução', 'Etiqueta', 'Armas de fogo', 'Arter marciais', 'Meditação', 'Armas Branca', 'Pesquisa', 'Furtividade', 'Sobrevivencia', 'Tecnologia'],
   'Conhecimentos': ['Academicos', 'Computação', 'Cosmologia', 'Enigmas', 'Esoterismo', 'Investigação', 'Direito', 'Medicina', 'Ocultismo', 'Politica', 'Ciência'],
 };
@@ -474,6 +474,13 @@ function wirePortraits() {
 function wireToolbar() {
   document.getElementById('btnPrint').addEventListener('click', () => window.print());
   document.getElementById('btnReset').addEventListener('click', () => {
+    // Ficha conectada à Artemis: o botão vira "Desconectar" (não apaga a ficha do Discord)
+    if (window.ArtemisOnline && window.ArtemisOnline.ativo) {
+      if (confirm('Desconectar esta ficha da Artemis neste navegador? A ficha continua salva no Discord.')) {
+        window.ArtemisOnline.desconectar();
+      }
+      return;
+    }
     const ok = confirm('Isso vai apagar todos os dados preenchidos nesta ficha. Deseja continuar?');
     if (!ok) return;
     localStorage.removeItem(STATE_KEY);
@@ -529,6 +536,14 @@ function collectState() {
 }
 
 function saveState() {
+  // Ficha conectada à Artemis: salva no Firebase em vez do navegador
+  if (window.ARTEMIS_ONLINE) {
+    if (window.ArtemisOnline && window.ArtemisOnline.ativo) {
+      window.ArtemisOnline.salvar(collectState());
+      flashSaveIndicator();
+    }
+    return;
+  }
   try {
     localStorage.setItem(STATE_KEY, JSON.stringify(collectState()));
     flashSaveIndicator();
@@ -547,8 +562,33 @@ function loadState() {
   }
 }
 
+/** Nomes que mudaram na ficha: Estamina virou Vigor e Liderança virou Instrução.
+ *  Fichas salvas antes da mudança continuam com os pontos no lugar certo. */
+const RENOMEADOS = [
+  ['attr-fisicos-estamina-', 'attr-fisicos-vigor-', 'Estamina', 'Vigor'],
+  ['skill-talentos-lideranca-', 'skill-talentos-instrucao-', 'Liderança', 'Instrução'],
+];
+
+function migrarNomesAntigos(state) {
+  ['fields', 'dots'].forEach((secao) => {
+    const dados = state[secao];
+    if (!dados) return;
+    Object.keys(dados).forEach((key) => {
+      RENOMEADOS.forEach(([antigo, novo, rotuloAntigo, rotuloNovo]) => {
+        if (!key.startsWith(antigo)) return;
+        const novaKey = novo + key.slice(antigo.length);
+        let valor = dados[key];
+        if (key.endsWith('-label') && valor.trim() === rotuloAntigo) valor = rotuloNovo;
+        if (!(novaKey in dados)) dados[novaKey] = valor;
+        delete dados[key];
+      });
+    });
+  });
+}
+
 function applyState(state) {
   if (!state) return;
+  migrarNomesAntigos(state);
 
   Object.entries(state.fields || {}).forEach(([key, value]) => {
     const input = document.querySelector(`input${keySelector(key)}`);
@@ -762,6 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Valores padrão do modelo original.
   setDefaults();
+  estadoPadrao = collectState(); // usado pra "limpar" a ficha antes de carregar a do Firebase
 
   // Liga toda a interatividade.
   wireBarArrows();
@@ -773,5 +814,29 @@ document.addEventListener('DOMContentLoaded', () => {
   wireRollSystem();
 
   // Restaura dados salvos (se existirem), sobrepondo os padrões.
-  applyState(loadState());
+  // Com a ficha conectada à Artemis, quem carrega os dados é o integracao.js.
+  if (!window.ARTEMIS_ONLINE) applyState(loadState());
 });
+
+/* ==========================================================================
+   7) PONTE COM A ARTEMIS — usada pelo integracao.js (Firebase)
+   ========================================================================== */
+
+let estadoPadrao = null;
+
+/** Volta a ficha ao estado de ficha nova (sem apagar o que está salvo no navegador). */
+function limparFicha() {
+  if (estadoPadrao) applyState(estadoPadrao);
+  document.querySelectorAll('.status-row.checked').forEach((r) => r.classList.remove('checked'));
+  document.querySelectorAll('.trait-row.selected').forEach((r) => r.classList.remove('selected'));
+  document.querySelectorAll('.portrait-img').forEach((img) => {
+    img.removeAttribute('src');
+    const btn = img.closest('button');
+    if (btn) btn.classList.remove('has-photo');
+  });
+}
+
+window.FichaBHC = {
+  ATTRIBUTES, SKILLS, slug,
+  collectState, applyState, loadState, limparFicha,
+};

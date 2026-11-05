@@ -110,6 +110,12 @@ input[type="text"]:focus {
 }
 .save-indicator.show { opacity: 1; }
 
+/* Status da conexão com a Artemis (Discord) */
+.artemis-status { font-size: 12px; color: #bbb; max-width: 340px; }
+.artemis-status:empty { display: none; }
+.artemis-status.ok { color: #8fd18f; }
+.artemis-status.erro { color: #e88; }
+
 /* ==========================================================================
    ESTRUTURA GERAL DAS PÁGINAS
    ========================================================================== */

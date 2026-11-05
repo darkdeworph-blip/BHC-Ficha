@@ -20,6 +20,7 @@
   <div class="toolbar-actions">
     <button id="btnPrint" type="button">Imprimir / Salvar PDF</button>
     <button id="btnReset" type="button">Limpar ficha</button>
+    <span id="artemisStatus" class="artemis-status" aria-live="polite"></span>
     <span id="saveIndicator" class="save-indicator" aria-live="polite"></span>
   </div>
 </div>
@@ -214,6 +215,20 @@
 
 </div>
 
+<!-- Integração com a Artemis (Discord). Sem Firebase configurado, a ficha funciona como antes. -->
+<script src="firebase-config.js"></script>
+<script>
+  // Decide antes do script.js se a ficha vem do Firebase (link da Artemis) ou do navegador.
+  (function () {
+    var cfg = window.FIREBASE_CONFIG || {};
+    var configurado = cfg.apiKey && cfg.apiKey.indexOf('COLE_') !== 0;
+    var temLink = new URLSearchParams(location.search).has('f');
+    var vinculado = false;
+    try { vinculado = !!localStorage.getItem('artemis_vinculo'); } catch (e) {}
+    window.ARTEMIS_ONLINE = !!(configurado && (temLink || vinculado));
+  })();
+</script>
 <script src="script.js"></script>
+<script type="module" src="integracao.js"></script>
 </body>
 </html>
