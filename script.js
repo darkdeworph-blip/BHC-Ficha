@@ -713,6 +713,14 @@ function rollD12() {
   return 1 + Math.floor(Math.random() * 12);
 }
 
+/** Dados que o Modo Clássico pode usar (escolhido na aba de configurações). */
+const DADOS_CLASSICO = [4, 6, 8, 10, 12, 20, 100];
+let dadoClassico = 12;
+
+function rollDie(lados) {
+  return 1 + Math.floor(Math.random() * lados);
+}
+
 function wireRollSystem() {
   // Clicar no dado rola; clicar de novo durante a animação pula ela.
   document.getElementById('diceRollBtn').addEventListener('click', () => {
@@ -729,7 +737,7 @@ function setRollMode(mode) {
 
 function renderRollEmpty() {
   cancelDiceAnimation();
-  const nome = rollMode === 'classico' ? 'Clássico' : 'Narrativo';
+  const nome = rollMode === 'classico' ? `Clássico (d${dadoClassico})` : 'Narrativo';
   document.getElementById('rollResult').innerHTML =
     '<p class="roll-empty">Selecione um Atributo e uma Perícia e clique no dado.' +
     `<span class="roll-empty-sub">Modo ${nome} · mude em Configurações</span></p>`;
@@ -779,7 +787,7 @@ function resetDice() {
   const { btn, body, hole, num } = diceParts();
   [body, hole, num].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
   num.textContent = '';
-  num.classList.remove('is-success', 'is-crit');
+  num.classList.remove('is-success', 'is-crit', 'is-wide');
   btn.classList.remove('is-rolling');
   diceRolling = false;
 }
@@ -859,6 +867,7 @@ async function animateDice(values, colorFor, onStop) {
 
     // 3) Para mostrando o valor na face do meio.
     num.textContent = v;
+    num.classList.toggle('is-wide', String(v).length > 2); // d100: número de 3 dígitos
     num.classList.remove('is-success', 'is-crit');
     const cls = colorFor(v);
     if (cls) num.classList.add(cls);
@@ -971,20 +980,21 @@ async function renderNarrativo(attr, skill, penalty) {
 }
 
 async function renderClassico(attr, skill, penalty) {
-  const natural = rollD12();
+  const lados = dadoClassico;
+  const natural = rollDie(lados);
   const subtotal = natural + attr.value + skill.value;
   const final = subtotal + penalty;
 
   const html = `
     <div class="roll-line"><span>Modo</span><strong>Clássico</strong></div>
-    <div class="roll-line"><span>d12 natural</span><strong>${natural}</strong></div>
+    <div class="roll-line"><span>d${lados} natural</span><strong>${natural}</strong></div>
     <div class="roll-line"><span>Atributo</span><strong>${attr.label} ${attr.value}</strong></div>
     <div class="roll-line"><span>Perícia</span><strong>${skill.label} ${skill.value}</strong></div>
     <div class="roll-line"><span>Penalidades</span><strong>${penalty}</strong></div>
     <div class="roll-final">Resultado final: ${final}</div>
   `;
   const box = document.getElementById('rollResult');
-  const registrar = () => registrarLog({ modo: 'classico', atributo: attr, habilidade: skill, penalidade: penalty, dados: [natural] });
+  const registrar = () => registrarLog({ modo: 'classico', lados, atributo: attr, habilidade: skill, penalidade: penalty, dados: [natural] });
 
   if (!animarDado) {
     box.innerHTML = html;
@@ -992,7 +1002,7 @@ async function renderClassico(attr, skill, penalty) {
     return;
   }
 
-  // Uma parada só, com o d12 natural (número neutro no Clássico).
+  // Uma parada só, com o dado natural (número neutro no Clássico).
   box.innerHTML = '<p class="roll-empty">Rolando...</p>';
   const fim = await animateDice([natural], () => '', () => {
     box.innerHTML = html;
@@ -1009,7 +1019,7 @@ async function renderClassico(attr, skill, penalty) {
    ========================================================================== */
 
 const CFG_KEY = 'bhcConfig_v1';
-const CFG_PADRAO = { tema: 'escuro', modo: 'narrativo', animacao: true, notasNoPdf: true };
+const CFG_PADRAO = { tema: 'escuro', modo: 'narrativo', dado: 12, animacao: true, notasNoPdf: true };
 const cfg = { ...CFG_PADRAO };
 
 function carregarCfg() {
@@ -1017,6 +1027,7 @@ function carregarCfg() {
     const salvo = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
     if (salvo.tema === 'escuro' || salvo.tema === 'claro') cfg.tema = salvo.tema;
     if (salvo.modo === 'narrativo' || salvo.modo === 'classico') cfg.modo = salvo.modo;
+    if (DADOS_CLASSICO.includes(salvo.dado)) cfg.dado = salvo.dado;
     if (typeof salvo.animacao === 'boolean') cfg.animacao = salvo.animacao;
     if (typeof salvo.notasNoPdf === 'boolean') cfg.notasNoPdf = salvo.notasNoPdf;
   } catch (err) { /* sem armazenamento: usa os padrões */ }
@@ -1029,7 +1040,14 @@ function salvarCfg() {
 /** Aplica uma opção na ficha e atualiza os controles da aba. */
 function aplicarCfg(nome) {
   if (nome === 'tema') document.documentElement.classList.toggle('tema-claro', cfg.tema === 'claro');
-  if (nome === 'modo') setRollMode(cfg.modo);
+  if (nome === 'modo') {
+    document.getElementById('cfgDadoRow').hidden = cfg.modo !== 'classico'; // o tipo de dado só aparece no Clássico
+    setRollMode(cfg.modo);
+  }
+  if (nome === 'dado') {
+    dadoClassico = cfg.dado;
+    if (rollMode === 'classico') renderRollEmpty();
+  }
   if (nome === 'animacao') animarDado = cfg.animacao;
   if (nome === 'notasNoPdf') document.documentElement.classList.toggle('sem-notas-pdf', !cfg.notasNoPdf);
 
@@ -1038,6 +1056,9 @@ function aplicarCfg(nome) {
   });
   document.querySelectorAll(`input[type="checkbox"][data-cfg="${nome}"]`).forEach((c) => {
     c.checked = !!cfg[nome];
+  });
+  document.querySelectorAll(`select[data-cfg="${nome}"]`).forEach((s) => {
+    s.value = String(cfg[nome]);
   });
 }
 
@@ -1073,6 +1094,16 @@ function wireSettings() {
     });
   });
 
+  document.querySelectorAll('select[data-cfg]').forEach((s) => {
+    s.addEventListener('change', () => {
+      const nome = s.dataset.cfg;
+      cfg[nome] = nome === 'dado' ? parseInt(s.value, 10) : s.value;
+      aplicarCfg(nome);
+      salvarCfg();
+    });
+  });
+  wireFundo();
+
   document.getElementById('btnCfg').addEventListener('click', () => setCfgPanel(true));
   document.getElementById('cfgClose').addEventListener('click', () => setCfgPanel(false));
   document.getElementById('cfgBackdrop').addEventListener('click', () => setCfgPanel(false));
@@ -1080,7 +1111,112 @@ function wireSettings() {
     if (e.key === 'Escape' && document.getElementById('cfgPanel').classList.contains('open')) setCfgPanel(false);
   });
 
-  Object.keys(CFG_PADRAO).forEach(aplicarCfg);
+  ['dado', ...Object.keys(CFG_PADRAO).filter((n) => n !== 'dado')].forEach(aplicarCfg);
+}
+
+/* --------------------------------------------------------------------------
+   FUNDO PERSONALIZADO — troca só o fundo vazio do site (fora das páginas).
+   Guardado neste navegador (chave bhcFundo_v1): o endereço da imagem ou, se a
+   pessoa enviar um arquivo, a imagem reduzida. O index.html aplica o fundo
+   salvo antes da página aparecer.
+   -------------------------------------------------------------------------- */
+
+const FUNDO_KEY = 'bhcFundo_v1';
+
+function fundoMsg(texto, erro) {
+  const el = document.getElementById('fundoMsg');
+  el.textContent = texto || '';
+  el.classList.toggle('erro', !!erro);
+}
+
+function aplicarFundo(valor) {
+  const raiz = document.documentElement;
+  if (valor) {
+    raiz.style.setProperty('--fundo-img', `url("${valor.replace(/["\\\n\r]/g, encodeURIComponent)}")`);
+    raiz.classList.add('tem-fundo');
+  } else {
+    raiz.style.removeProperty('--fundo-img');
+    raiz.classList.remove('tem-fundo');
+  }
+}
+
+/** Guarda o fundo; devolve false se o navegador não deixou (imagem grande demais). */
+function guardarFundo(valor) {
+  try {
+    if (valor) localStorage.setItem(FUNDO_KEY, valor);
+    else localStorage.removeItem(FUNDO_KEY);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function wireFundo() {
+  const arquivo = document.getElementById('fundoArquivo');
+  const campoUrl = document.getElementById('fundoUrl');
+
+  try {
+    const salvo = localStorage.getItem(FUNDO_KEY);
+    if (salvo && /^https?:/i.test(salvo)) campoUrl.value = salvo;
+  } catch (err) { /* sem armazenamento */ }
+
+  document.getElementById('fundoEscolher').addEventListener('click', () => arquivo.click());
+
+  arquivo.addEventListener('change', () => {
+    const file = arquivo.files && arquivo.files[0];
+    arquivo.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Reduz para no máximo 1920px: o navegador guarda pouca coisa e o fundo não precisa de mais
+        let { naturalWidth: w, naturalHeight: h } = img;
+        const escala = Math.min(1, 1920 / Math.max(w, h));
+        w = Math.round(w * escala);
+        h = Math.round(h * escala);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        aplicarFundo(dataUrl);
+        campoUrl.value = '';
+        const guardou = guardarFundo(dataUrl);
+        fundoMsg(guardou
+          ? 'Fundo aplicado.'
+          : 'Fundo aplicado, mas o navegador não conseguiu guardar. Ele some ao recarregar.', !guardou);
+      };
+      img.onerror = () => fundoMsg('Não consegui ler essa imagem. Tente outro arquivo.', true);
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const usarUrl = () => {
+    const url = campoUrl.value.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      fundoMsg('Cole o endereço completo da imagem, começando com http:// ou https://', true);
+      return;
+    }
+    fundoMsg('Carregando...');
+    const teste = new Image();
+    teste.onload = () => {
+      aplicarFundo(url);
+      fundoMsg(guardarFundo(url) ? 'Fundo aplicado.' : 'Fundo aplicado, mas o navegador não conseguiu guardar.', false);
+    };
+    teste.onerror = () => fundoMsg('Não consegui carregar essa imagem. Confira o endereço (precisa ser o link direto da imagem).', true);
+    teste.src = url;
+  };
+  document.getElementById('fundoUsarUrl').addEventListener('click', usarUrl);
+  campoUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') usarUrl(); });
+
+  document.getElementById('fundoRemover').addEventListener('click', () => {
+    aplicarFundo(null);
+    guardarFundo(null);
+    campoUrl.value = '';
+    fundoMsg('Fundo removido.');
+  });
 }
 
 /* ==========================================================================

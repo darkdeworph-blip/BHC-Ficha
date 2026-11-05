@@ -244,12 +244,16 @@ const ArtemisOnline = {
   async registrarRolagem(info) {
     try {
       if (!this.ativo || !this.db || !this.servidorId || !this.fichaId) return;
-      const dados = (info.dados || []).map((n) => Math.trunc(Number(n))).filter((n) => n >= 1 && n <= 12).slice(0, 60);
+      const classico = info.modo === 'classico';
+      const lados = [4, 6, 8, 10, 12, 20, 100].includes(Number(info.lados)) ? Number(info.lados) : 12;
+      const maximo = classico ? lados : 12;
+      const dados = (info.dados || []).map((n) => Math.trunc(Number(n))).filter((n) => n >= 1 && n <= maximo).slice(0, 60);
       if (!dados.length) return;
       const traco = (t) => ({ nome: String(t.label || '').slice(0, 40), valor: Math.max(0, Math.trunc(Number(t.value)) || 0) });
       await fb.addDoc(fb.collection(this.db, 'servidores', this.servidorId, 'rolagens_site'), {
         ficha: this.fichaId,
-        modo: info.modo === 'classico' ? 'classico' : 'narrativo',
+        // Clássico com outro dado vai como "classico-d20" (assim as regras do Firestore não mudam)
+        modo: classico ? (lados === 12 ? 'classico' : 'classico-d' + lados) : 'narrativo',
         atributo: traco(info.atributo),
         habilidade: traco(info.habilidade),
         penalidade: Math.min(0, Math.trunc(Number(info.penalidade)) || 0),

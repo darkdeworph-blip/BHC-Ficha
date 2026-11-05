@@ -126,16 +126,18 @@ input[type="text"]:focus {
 }
 .toolbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .toolbar-cfg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #2a2a2a;
   color: #fff;
   border: 1px solid #555;
   border-radius: 6px;
-  width: 34px;
-  height: 31px;
-  font-size: 17px;
-  line-height: 1;
+  width: 33px;
+  height: 33px;
   padding: 0;
 }
+.toolbar-cfg svg { display: block; }
 .toolbar-cfg:hover { background: #3a3a3a; }
 .toolbar-title { font-weight: 700; letter-spacing: .02em; font-size: 14px; }
 .toolbar-actions { display: flex; align-items: center; gap: 10px; }
@@ -290,25 +292,26 @@ input[type="text"]:focus {
   flex: 1;
   height: 20.1mm;
   margin-left: -12.95mm;
-  padding-left: 12.95mm;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+/* O bloco do nome e as barras seguem por baixo do retrato (que fica na frente),
+   então não sobra vão preto nos cantos do círculo. */
 .flag-name,
 input[type="text"].flag-name {
   flex: 54;
-  background: var(--c-flag-light);
-  color: #14141a;
+  background: rgba(var(--c-ov), 0.12);
+  color: var(--c-text);
   border: none;
-  padding: 0 3mm;
+  padding: 0 3mm 0 calc(12.95mm + 3mm);
   font-family: var(--f-sans);
   font-weight: 700;
   font-size: 4mm;
 }
-.flag-name::placeholder { color: #14141a; opacity: .55; }
+.flag-name::placeholder { color: var(--c-text); opacity: .5; }
 .flag-name:hover, .flag-name:focus,
-input[type="text"].flag-name:hover, input[type="text"].flag-name:focus { background: var(--c-flag-light); }
+input[type="text"].flag-name:hover, input[type="text"].flag-name:focus { background: rgba(var(--c-ov), 0.12); }
 .flag-stat {
   position: relative;
   overflow: hidden;
@@ -358,6 +361,7 @@ input[type="text"].flag-name:hover, input[type="text"].flag-name:focus { backgro
 .dice-faces { fill: var(--c-text); }
 .dice-face-num.is-success { fill: var(--c-face-success); }
 .dice-face-num.is-crit    { fill: var(--c-face-crit); font-size: 30px; }
+.dice-face-num.is-wide    { font-size: 17px; }
 .dice-roll-btn.is-rolling { cursor: progress; }
 .dice-roll-btn.is-rolling:hover,
 .dice-roll-btn.is-rolling:active { transform: none; }
@@ -808,7 +812,7 @@ input.weapon-extra-line {
    IMPRESSÃO
    ========================================================================== */
 @media print {
-  html, body { background: var(--c-bg); }
+  html, body { background: var(--c-bg) !important; background-image: none !important; }
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -991,3 +995,47 @@ input.weapon-extra-line {
   border-radius: 50%;
   background: #fff;
 }
+
+
+/* ==========================================================================
+   FUNDO PERSONALIZADO DO SITE (só a parte vazia, fora das páginas)
+   ========================================================================== */
+html.tem-fundo {
+  background-image: var(--fundo-img);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+html.tem-fundo body { background: transparent; }
+
+/* ---- Campos extras da aba de configurações ---- */
+.cfg-sub { margin-top: 12px; }
+.cfg-sub[hidden] { display: none; }
+.cfg-sub label { display: block; margin-bottom: 6px; font-size: 12px; color: #9a9a9a; }
+.cfg-select,
+.cfg-input {
+  width: 100%;
+  background: #262626;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--f-sans);
+  font-size: 13px;
+}
+input[type="text"].cfg-input { width: 100%; }
+input[type="text"].cfg-input:hover, input[type="text"].cfg-input:focus { background: #2e2e2e; }
+.cfg-row { display: flex; gap: 8px; margin-top: 8px; }
+.cfg-btn {
+  flex: 1;
+  background: #2a2a2a;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.cfg-btn:hover { background: #3a3a3a; }
+.cfg-msg { min-height: 1em; margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #9a9a9a; }
+.cfg-msg.erro { color: #e88; }
