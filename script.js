@@ -497,7 +497,7 @@ function scheduleSave() {
 /** Delegação: qualquer digitação em input/contenteditable agenda um salvamento. */
 function wireDelegatedInput() {
   document.addEventListener('input', (e) => {
-    if (e.target.matches('input[type="text"], [contenteditable="true"]')) {
+    if (e.target.matches('input[type="text"], textarea[data-key], [contenteditable="true"]')) {
       scheduleSave();
     }
   });
@@ -515,6 +515,9 @@ function collectState() {
   });
   document.querySelectorAll('[contenteditable="true"][data-key]').forEach((el) => {
     state.fields[el.dataset.key] = el.textContent;
+  });
+  document.querySelectorAll('textarea[data-key]').forEach((el) => {
+    state.fields[el.dataset.key] = el.value;
   });
   document.querySelectorAll('.dots[data-key]').forEach((el) => {
     state.dots[el.dataset.key] = el.dataset.value || '0';
@@ -593,6 +596,8 @@ function applyState(state) {
   Object.entries(state.fields || {}).forEach(([key, value]) => {
     const input = document.querySelector(`input${keySelector(key)}`);
     if (input) { input.value = value; return; }
+    const area = document.querySelector(`textarea${keySelector(key)}`);
+    if (area) { area.value = value; return; }
     const editable = document.querySelector(`[contenteditable="true"]${keySelector(key)}`);
     if (editable) editable.textContent = value;
   });
@@ -624,6 +629,8 @@ function applyState(state) {
       if (btn) btn.classList.add('has-photo');
     }
   });
+
+  refreshNotes(true); // abre a página de anotações se houver texto salvo
 }
 
 let flashTimeout = null;
@@ -640,31 +647,32 @@ function flashSaveIndicator() {
    5b) SISTEMA DE ROLAGEM — Modo Narrativo e Modo Clássico
    ========================================================================== */
 
-/** Regra de sucesso no d12 (definida pelo usuário):
- *  1–6 nenhum sucesso · 7–11 = 1 sucesso · 12 = 2 sucessos (crítico). */
+/** Regra de sucesso no d12:
+ *  1–5 nenhum sucesso · 6–11 = 1 sucesso · 12 = 2 sucessos (crítico). */
 function successesForDie(value) {
   if (value === 12) return 2;
-  if (value >= 7) return 1;
+  if (value >= 6) return 1;
   return 0;
 }
 
-function qualityFromSuccesses(total) {
-  if (total <= 0) return 'Falha Crítica';
-  if (total <= 2) return 'Ruim';
-  if (total <= 4) return 'Normal';
-  if (total <= 6) return 'Bom';
-  if (total <= 8) return 'Excelente';
-  return 'Sucesso Extremo';
+/** Faixa de cor do total de sucessos (as cores ficam no style.css, por tema):
+ *  0 · 1–2 · 3–4 · 5–6 · 7–8 · 9+ */
+function scoreClass(total) {
+  if (total <= 0) return 'res-0';
+  if (total <= 2) return 'res-1';
+  if (total <= 4) return 'res-2';
+  if (total <= 6) return 'res-3';
+  if (total <= 8) return 'res-4';
+  return 'res-5';
 }
 
-const QUALITY_CLASS = {
-  'Falha Crítica': 'q-critfail',
-  'Ruim': 'q-ruim',
-  'Normal': 'q-normal',
-  'Bom': 'q-bom',
-  'Excelente': 'q-excelente',
-  'Sucesso Extremo': 'q-extremo',
-};
+function scoreHtml(total) {
+  return `
+    <div class="roll-score ${scoreClass(total)}">
+      <span class="roll-score-num">${total}</span>
+      <span class="roll-score-label">${total === 1 ? 'sucesso' : 'sucessos'}</span>
+    </div>`;
+}
 
 let rollMode = 'narrativo';
 
@@ -706,25 +714,197 @@ function rollD12() {
 }
 
 function wireRollSystem() {
-  // Alternar modo Narrativo / Clássico — limpa só o resultado anterior.
-  document.querySelectorAll('.roll-mode-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.roll-mode-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      rollMode = btn.dataset.mode;
-      renderRollEmpty();
-    });
+  // Clicar no dado rola; clicar de novo durante a animação pula ela.
+  document.getElementById('diceRollBtn').addEventListener('click', () => {
+    if (diceRolling) skipDice();
+    else performRoll();
   });
+}
 
-  document.getElementById('diceRollBtn').addEventListener('click', performRoll);
+/** Troca o modo de rolagem (vem da aba de configurações) e limpa o resultado anterior. */
+function setRollMode(mode) {
+  rollMode = mode === 'classico' ? 'classico' : 'narrativo';
+  renderRollEmpty();
 }
 
 function renderRollEmpty() {
+  cancelDiceAnimation();
+  const nome = rollMode === 'classico' ? 'Clássico' : 'Narrativo';
   document.getElementById('rollResult').innerHTML =
-    '<p class="roll-empty">Selecione um Atributo e uma Perícia e clique no dado.</p>';
+    '<p class="roll-empty">Selecione um Atributo e uma Perícia e clique no dado.' +
+    `<span class="roll-empty-sub">Modo ${nome} · mude em Configurações</span></p>`;
+}
+
+/* --------------------------------------------------------------------------
+   ANIMAÇÃO DO DADO DO BURACO NEGRO
+   O buraco negro se mexe, o dado treme e gira, para mostrando na face do
+   meio o valor de um dado; repete para cada dado da reserva e no fim volta
+   a ser o buraco negro. Os dados vão aparecendo no painel conforme param.
+   Clicar no dado durante a animação pula direto para o resultado.
+   -------------------------------------------------------------------------- */
+
+/** Liga/desliga a animação (controlado pela aba de configurações). */
+let animarDado = true;
+
+let diceRolling = false;
+let diceToken = 0;        // muda a cada rolagem/cancelamento para interromper animações antigas
+let skipRequested = false; // pedido de "pular animação"
+let sleepEnd = null;       // encerra a espera atual quando a animação é pulada
+
+function wait(ms) {
+  return new Promise((r) => {
+    sleepEnd = r;
+    setTimeout(r, ms);
+  });
+}
+
+/** Roda uma animação e espera terminar (sem quebrar se for cancelada). */
+function play(el, keyframes, options) {
+  const anim = el.animate(keyframes, { fill: 'forwards', ...options });
+  return anim.finished.catch(() => {});
+}
+
+function diceParts() {
+  const svg = document.getElementById('diceSvg');
+  return {
+    btn: document.getElementById('diceRollBtn'),
+    body: svg.querySelector('.dice-body'),
+    hole: svg.querySelector('.dice-hole'),
+    num: svg.querySelector('.dice-face-num'),
+  };
+}
+
+/** Volta o dado ao estado parado (buraco negro visível, sem número). */
+function resetDice() {
+  const { btn, body, hole, num } = diceParts();
+  [body, hole, num].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+  num.textContent = '';
+  num.classList.remove('is-success', 'is-crit');
+  btn.classList.remove('is-rolling');
+  diceRolling = false;
+}
+
+function cancelDiceAnimation() {
+  diceToken++;
+  if (sleepEnd) sleepEnd();
+  resetDice();
+}
+
+/** Pula a animação em andamento: o resultado completo aparece de uma vez. */
+function skipDice() {
+  if (!diceRolling) return;
+  skipRequested = true;
+  const { body, hole, num } = diceParts();
+  [body, hole, num].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+  if (sleepEnd) sleepEnd();
+}
+
+/** Tempo por dado: ~meio segundo, acelerando a partir de 8 dados. */
+function msPerDie(count) {
+  if (count < 8) return 500;
+  return Math.max(220, Math.round(3600 / count));
+}
+
+/**
+ * Anima a sequência de valores no dado.
+ * colorFor(valor) devolve '', 'is-success' ou 'is-crit' para a cor do número.
+ * onStop(valor, índice) é chamado quando cada dado para.
+ * Devolve true (terminou), 'pulado' (a pessoa pulou) ou false (foi cancelada).
+ */
+async function animateDice(values, colorFor, onStop) {
+  const token = ++diceToken;
+  skipRequested = false;
+  const { btn, body, hole, num } = diceParts();
+  const per = msPerDie(values.length);
+  const spinMs = Math.round(per * 0.55);
+  const holdMs = per - spinMs;
+
+  // Devolve o resultado final se a animação deve parar agora; senão, undefined.
+  const parou = () => {
+    if (token !== diceToken) return false;
+    if (skipRequested) {
+      skipRequested = false;
+      resetDice();
+      return 'pulado';
+    }
+    return undefined;
+  };
+
+  diceRolling = true;
+  btn.classList.add('is-rolling');
+
+  // 1) O buraco negro faz um movimento pequeno e some para dentro.
+  await play(hole, [
+    { transform: 'scale(1) rotate(0deg)', opacity: 1 },
+    { transform: 'scale(1.12) rotate(-12deg)', opacity: 1, offset: 0.4 },
+    { transform: 'scale(0.2) rotate(40deg)', opacity: 0 },
+  ], { duration: 260, easing: 'ease-in' });
+  let fim = parou();
+  if (fim !== undefined) return fim;
+
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i];
+
+    // 2) Esconde o número anterior; o dado treme e gira.
+    num.getAnimations().forEach((a) => a.cancel());
+    num.style.opacity = '0';
+    await play(body, [
+      { transform: 'translate(0,0) rotate(0deg)' },
+      { transform: 'translate(-2px,1px) rotate(-8deg)', offset: 0.12 },
+      { transform: 'translate(2px,-1px) rotate(8deg)', offset: 0.24 },
+      { transform: 'translate(0,0) rotate(360deg)' },
+    ], { duration: spinMs, easing: 'cubic-bezier(.3,.1,.3,1)', fill: 'none' });
+    fim = parou();
+    if (fim !== undefined) return fim;
+
+    // 3) Para mostrando o valor na face do meio.
+    num.textContent = v;
+    num.classList.remove('is-success', 'is-crit');
+    const cls = colorFor(v);
+    if (cls) num.classList.add(cls);
+    num.style.opacity = '';
+    const pop = cls === 'is-crit' ? 1.25 : 1.1;
+    play(num, [
+      { transform: `scale(${pop})`, opacity: 0 },
+      { transform: 'scale(1)', opacity: 1 },
+    ], { duration: Math.min(160, holdMs) });
+    onStop(v, i);
+
+    await wait(holdMs);
+    fim = parou();
+    if (fim !== undefined) return fim;
+  }
+
+  // 4) O número some e o buraco negro volta.
+  await play(num, [{ opacity: 1 }, { opacity: 0 }], { duration: 180 });
+  fim = parou();
+  if (fim !== undefined) return fim;
+  await play(hole, [
+    { transform: 'scale(0.2) rotate(40deg)', opacity: 0 },
+    { transform: 'scale(1.08) rotate(-6deg)', opacity: 1, offset: 0.7 },
+    { transform: 'scale(1) rotate(0deg)', opacity: 1 },
+  ], { duration: 280, easing: 'ease-out' });
+  fim = parou();
+  if (fim !== undefined) return fim;
+
+  resetDice();
+  return true;
+}
+
+/**
+ * Avisa a Artemis (Discord) da rolagem feita no site. Só acontece com a ficha
+ * conectada; sem conexão, ou se o aviso não chegar, nada acontece.
+ */
+function registrarLog(info) {
+  try {
+    const on = window.ArtemisOnline;
+    if (on && on.ativo && typeof on.registrarRolagem === 'function') on.registrarRolagem(info);
+  } catch (err) { /* o log é opcional */ }
 }
 
 function performRoll() {
+  if (diceRolling) return; // ignora cliques enquanto o dado está girando
+
   const attr = getSelectedTrait('attribute');
   const skill = getSelectedTrait('skill');
   const box = document.getElementById('rollResult');
@@ -743,39 +923,59 @@ function performRoll() {
   }
 }
 
-function renderNarrativo(attr, skill, penalty) {
+function dieChipHtml(v, pop) {
+  const cls = v === 12 ? 'roll-die crit' : successesForDie(v) > 0 ? 'roll-die success' : 'roll-die';
+  return `<span class="${cls}${pop ? ' pop' : ''}">${v}</span>`;
+}
+
+function dieColorClass(v) {
+  if (v === 12) return 'is-crit';
+  return successesForDie(v) > 0 ? 'is-success' : '';
+}
+
+async function renderNarrativo(attr, skill, penalty) {
   const initialPool = attr.value + skill.value;
   const finalPool = Math.max(1, initialPool + penalty);
   const rolls = Array.from({ length: finalPool }, rollD12);
   const successes = rolls.reduce((sum, v) => sum + successesForDie(v), 0);
-  const quality = qualityFromSuccesses(successes);
 
-  const diceHtml = rolls
-    .map((v) => {
-      const cls = v === 12 ? 'roll-die crit' : successesForDie(v) > 0 ? 'roll-die success' : 'roll-die';
-      return `<span class="${cls}">${v}</span>`;
-    })
-    .join('');
-
-  document.getElementById('rollResult').innerHTML = `
+  const box = document.getElementById('rollResult');
+  box.innerHTML = `
     <div class="roll-line"><span>Modo</span><strong>Narrativo</strong></div>
     <div class="roll-line"><span>Atributo</span><strong>${attr.label} ${attr.value}</strong></div>
     <div class="roll-line"><span>Perícia</span><strong>${skill.label} ${skill.value}</strong></div>
     <div class="roll-line"><span>Reserva inicial</span><strong>${initialPool}d12</strong></div>
     <div class="roll-line"><span>Penalidades</span><strong>${penalty}</strong></div>
     <div class="roll-line"><span>Reserva final</span><strong>${finalPool}d12</strong></div>
-    <div class="roll-dice-values">${diceHtml}</div>
-    <div class="roll-final">Sucessos: ${successes}</div>
-    <div class="roll-quality ${QUALITY_CLASS[quality]}">${quality}</div>
+    <div class="roll-dice-values"></div>
   `;
+  const diceRow = box.querySelector('.roll-dice-values');
+  const showTotal = () => box.insertAdjacentHTML('beforeend', scoreHtml(successes));
+  const registrar = () => registrarLog({ modo: 'narrativo', atributo: attr, habilidade: skill, penalidade: penalty, dados: rolls });
+
+  if (!animarDado) {
+    diceRow.innerHTML = rolls.map((v) => dieChipHtml(v, false)).join('');
+    showTotal();
+    registrar();
+    return;
+  }
+
+  const fim = await animateDice(rolls, dieColorClass, (v) => {
+    diceRow.insertAdjacentHTML('beforeend', dieChipHtml(v, true));
+  });
+  if (fim === 'pulado') {
+    diceRow.innerHTML = rolls.map((v) => dieChipHtml(v, false)).join('');
+  }
+  if (fim) showTotal();
+  registrar(); // a rolagem aconteceu mesmo se a animação foi interrompida
 }
 
-function renderClassico(attr, skill, penalty) {
+async function renderClassico(attr, skill, penalty) {
   const natural = rollD12();
   const subtotal = natural + attr.value + skill.value;
   const final = subtotal + penalty;
 
-  document.getElementById('rollResult').innerHTML = `
+  const html = `
     <div class="roll-line"><span>Modo</span><strong>Clássico</strong></div>
     <div class="roll-line"><span>d12 natural</span><strong>${natural}</strong></div>
     <div class="roll-line"><span>Atributo</span><strong>${attr.label} ${attr.value}</strong></div>
@@ -783,6 +983,156 @@ function renderClassico(attr, skill, penalty) {
     <div class="roll-line"><span>Penalidades</span><strong>${penalty}</strong></div>
     <div class="roll-final">Resultado final: ${final}</div>
   `;
+  const box = document.getElementById('rollResult');
+  const registrar = () => registrarLog({ modo: 'classico', atributo: attr, habilidade: skill, penalidade: penalty, dados: [natural] });
+
+  if (!animarDado) {
+    box.innerHTML = html;
+    registrar();
+    return;
+  }
+
+  // Uma parada só, com o d12 natural (número neutro no Clássico).
+  box.innerHTML = '<p class="roll-empty">Rolando...</p>';
+  const fim = await animateDice([natural], () => '', () => {
+    box.innerHTML = html;
+  });
+  if (fim === 'pulado') box.innerHTML = html;
+  registrar();
+}
+
+/* ==========================================================================
+   5c) CONFIGURAÇÕES — aba lateral (abre pela esquerda)
+   Ficam só neste navegador (não vão para a ficha nem para a Artemis).
+   Para criar uma opção nova: coloque um controle com data-cfg="nome" no
+   index.html, um valor padrão em CFG_PADRAO e trate o nome em aplicarCfg().
+   ========================================================================== */
+
+const CFG_KEY = 'bhcConfig_v1';
+const CFG_PADRAO = { tema: 'escuro', modo: 'narrativo', animacao: true, notasNoPdf: true };
+const cfg = { ...CFG_PADRAO };
+
+function carregarCfg() {
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+    if (salvo.tema === 'escuro' || salvo.tema === 'claro') cfg.tema = salvo.tema;
+    if (salvo.modo === 'narrativo' || salvo.modo === 'classico') cfg.modo = salvo.modo;
+    if (typeof salvo.animacao === 'boolean') cfg.animacao = salvo.animacao;
+    if (typeof salvo.notasNoPdf === 'boolean') cfg.notasNoPdf = salvo.notasNoPdf;
+  } catch (err) { /* sem armazenamento: usa os padrões */ }
+}
+
+function salvarCfg() {
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (err) { /* segue sem lembrar */ }
+}
+
+/** Aplica uma opção na ficha e atualiza os controles da aba. */
+function aplicarCfg(nome) {
+  if (nome === 'tema') document.documentElement.classList.toggle('tema-claro', cfg.tema === 'claro');
+  if (nome === 'modo') setRollMode(cfg.modo);
+  if (nome === 'animacao') animarDado = cfg.animacao;
+  if (nome === 'notasNoPdf') document.documentElement.classList.toggle('sem-notas-pdf', !cfg.notasNoPdf);
+
+  document.querySelectorAll(`.cfg-seg[data-cfg="${nome}"] button`).forEach((b) => {
+    b.classList.toggle('active', b.dataset.value === String(cfg[nome]));
+  });
+  document.querySelectorAll(`input[type="checkbox"][data-cfg="${nome}"]`).forEach((c) => {
+    c.checked = !!cfg[nome];
+  });
+}
+
+function setCfgPanel(aberto) {
+  const painel = document.getElementById('cfgPanel');
+  const fundo = document.getElementById('cfgBackdrop');
+  painel.classList.toggle('open', aberto);
+  fundo.classList.toggle('open', aberto);
+  painel.setAttribute('aria-hidden', String(!aberto));
+  if (aberto) document.getElementById('cfgClose').focus();
+  else document.getElementById('btnCfg').focus();
+}
+
+function wireSettings() {
+  carregarCfg();
+
+  document.querySelectorAll('.cfg-seg').forEach((seg) => {
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      const nome = seg.dataset.cfg;
+      if (cfg[nome] === b.dataset.value) return;
+      cfg[nome] = b.dataset.value;
+      aplicarCfg(nome);
+      salvarCfg();
+    });
+  });
+  document.querySelectorAll('input[type="checkbox"][data-cfg]').forEach((c) => {
+    c.addEventListener('change', () => {
+      cfg[c.dataset.cfg] = c.checked;
+      aplicarCfg(c.dataset.cfg);
+      salvarCfg();
+    });
+  });
+
+  document.getElementById('btnCfg').addEventListener('click', () => setCfgPanel(true));
+  document.getElementById('cfgClose').addEventListener('click', () => setCfgPanel(false));
+  document.getElementById('cfgBackdrop').addEventListener('click', () => setCfgPanel(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('cfgPanel').classList.contains('open')) setCfgPanel(false);
+  });
+
+  Object.keys(CFG_PADRAO).forEach(aplicarCfg);
+}
+
+/* ==========================================================================
+   5d) ANOTAÇÕES — página extra aberta pelo "+" embaixo da ficha
+   Sem título, sem formatação. A página cresce conforme a pessoa escreve,
+   pode ser minimizada (o texto fica guardado) e sai no PDF junto com a ficha.
+   O texto é salvo como um campo comum da ficha (data-key="notas-livres").
+   ========================================================================== */
+
+function notesEls() {
+  return {
+    page: document.getElementById('notesPage'),
+    text: document.getElementById('notesText'),
+    mirror: document.getElementById('notesPrint'),
+    add: document.getElementById('notesAdd'),
+    addWrap: document.getElementById('notesAddWrap'),
+  };
+}
+
+/** Ajusta a altura ao texto, atualiza a cópia de impressão e as marcas "tem texto". */
+function refreshNotes(abrirSeTemTexto) {
+  const { page, text, mirror, add } = notesEls();
+  if (!page) return;
+  const temTexto = text.value.trim() !== '';
+  mirror.textContent = text.value;
+  page.classList.toggle('tem-texto', temTexto);
+  add.classList.toggle('tem-texto', temTexto);
+  if (abrirSeTemTexto && temTexto) setNotesOpen(true);
+  if (page.classList.contains('open')) {
+    text.style.height = 'auto';
+    text.style.height = text.scrollHeight + 'px';
+  }
+}
+
+function setNotesOpen(aberta, focar) {
+  const { page, text, addWrap } = notesEls();
+  page.classList.toggle('open', aberta);
+  addWrap.classList.toggle('oculto', aberta);
+  if (aberta) {
+    refreshNotes(false);
+    if (focar) text.focus();
+  }
+}
+
+function wireNotes() {
+  const { text, add } = notesEls();
+  add.addEventListener('click', () => setNotesOpen(true, true));
+  document.getElementById('notesMin').addEventListener('click', () => {
+    setNotesOpen(false);
+    add.focus();
+  });
+  text.addEventListener('input', () => refreshNotes(false));
 }
 
 
@@ -812,6 +1162,8 @@ document.addEventListener('DOMContentLoaded', () => {
   wireToolbar();
   wireDelegatedInput();
   wireRollSystem();
+  wireNotes();
+  wireSettings();
 
   // Restaura dados salvos (se existirem), sobrepondo os padrões.
   // Com a ficha conectada à Artemis, quem carrega os dados é o integracao.js.

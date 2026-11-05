@@ -208,6 +208,9 @@ const ArtemisOnline = {
   ultimo: null,
   ref: null,
   auth: null,
+  db: null,
+  servidorId: null,
+  fichaId: null,
   _espera: null,
   _pendente: null,
 
@@ -230,6 +233,31 @@ const ArtemisOnline = {
     } catch (erro) {
       console.error(erro);
       status('Não consegui salvar no Discord. Confira a internet e recarregue a página.', 'erro');
+    }
+  },
+
+  /**
+   * Log das rolagens: deixa um registro em servidores/{s}/rolagens_site para o
+   * bot (comando /artemis log) postar no canal que o mestre escolheu.
+   * É opcional: sem conexão, ou se der qualquer erro, nada acontece.
+   */
+  async registrarRolagem(info) {
+    try {
+      if (!this.ativo || !this.db || !this.servidorId || !this.fichaId) return;
+      const dados = (info.dados || []).map((n) => Math.trunc(Number(n))).filter((n) => n >= 1 && n <= 12).slice(0, 60);
+      if (!dados.length) return;
+      const traco = (t) => ({ nome: String(t.label || '').slice(0, 40), valor: Math.max(0, Math.trunc(Number(t.value)) || 0) });
+      await fb.addDoc(fb.collection(this.db, 'servidores', this.servidorId, 'rolagens_site'), {
+        ficha: this.fichaId,
+        modo: info.modo === 'classico' ? 'classico' : 'narrativo',
+        atributo: traco(info.atributo),
+        habilidade: traco(info.habilidade),
+        penalidade: Math.min(0, Math.trunc(Number(info.penalidade)) || 0),
+        dados,
+        criado_em: fb.serverTimestamp(),
+      });
+    } catch (erro) {
+      console.warn('Log da rolagem não enviado (sem problema):', erro);
     }
   },
 
@@ -274,6 +302,9 @@ async function iniciar() {
   const auth = fb.getAuth(app);
   const db = fb.getFirestore(app);
   ArtemisOnline.auth = auth;
+  ArtemisOnline.db = db;
+  ArtemisOnline.servidorId = vinculo.s;
+  ArtemisOnline.fichaId = vinculo.f;
 
   if (token) {
     try {

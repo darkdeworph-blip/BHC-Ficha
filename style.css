@@ -13,6 +13,7 @@
   --c-vida:          #CC0000;
   --c-sanidade:      #561269;
   --c-forca:         #CC7A00;
+  --c-ov:            255, 255, 255; /* cor (RGB) das sobreposições translúcidas */
   --c-flag-light:    #D9DEEB;
   --c-flag-red:      #FF3131;
   --c-flag-navy:     #1800AD;
@@ -30,6 +31,39 @@
   --margin-x: 10.3mm;    /* ~4.9% da largura, medido no original */
 
   --fs-base: 3.15mm;
+
+  /* ---- Cores do total de sucessos: 0 · 1–2 · 3–4 · 5–6 · 7–8 · 9+ ---- */
+  --res-0: #7d0f0f;  /* vermelho bem escuro */
+  --res-1: #ff6b6b;  /* vermelho claro */
+  --res-2: #ece4d2;  /* branco diferente do texto */
+  --res-3: #4da3ff;  /* azul */
+  --res-4: #b36bff;  /* roxo */
+  --res-5: #ff5fb0;  /* rosa */
+
+  /* ---- Cor do número na face do dado ---- */
+  --c-face-success: #cc0000;
+  --c-face-crit:    #7B1FA2;
+  --c-page-out:     #4b4b4b; /* fundo fora das páginas */
+}
+
+/* ---- Tema claro (escolhido na aba de configurações) ---- */
+html.tema-claro {
+  --c-bg:           #ffffff;
+  --c-text:         #141414;
+  --c-stripe:       #d9d9d9;
+  --c-ov:           0, 0, 0;
+  --c-page-out:     #c9c9c9;
+  --c-placeholder:  #9aa0ad;
+
+  --res-0: #5c0000;
+  --res-1: #e03a3a;
+  --res-2: #8d8676;
+  --res-3: #1f6fd6;
+  --res-4: #8a3fe0;
+  --res-5: #e0237f;
+
+  --c-face-success: #ff4040;
+  --c-face-crit:    #c58bff;
 }
 
 /* ==========================================================================
@@ -40,7 +74,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #4b4b4b;
+  background: var(--c-page-out);
   color: var(--c-text);
   font-family: var(--f-sans);
 }
@@ -56,7 +90,7 @@ button {
 }
 [contenteditable="true"]:hover,
 [contenteditable="true"]:focus {
-  background: rgba(255,255,255,0.08);
+  background: rgba(var(--c-ov),0.08);
 }
 
 input[type="text"] {
@@ -70,7 +104,7 @@ input[type="text"] {
 }
 input[type="text"]:hover,
 input[type="text"]:focus {
-  background: rgba(255,255,255,0.08);
+  background: rgba(var(--c-ov),0.08);
 }
 
 /* ==========================================================================
@@ -88,7 +122,21 @@ input[type="text"]:focus {
   background: #1a1a1a;
   border-bottom: 1px solid #333;
   font-family: var(--f-sans);
+  color: #fff;
 }
+.toolbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.toolbar-cfg {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  width: 34px;
+  height: 31px;
+  font-size: 17px;
+  line-height: 1;
+  padding: 0;
+}
+.toolbar-cfg:hover { background: #3a3a3a; }
 .toolbar-title { font-weight: 700; letter-spacing: .02em; font-size: 14px; }
 .toolbar-actions { display: flex; align-items: center; gap: 10px; }
 .toolbar-actions button {
@@ -247,7 +295,8 @@ input[type="text"]:focus {
   flex-direction: column;
   overflow: hidden;
 }
-.flag-name {
+.flag-name,
+input[type="text"].flag-name {
   flex: 54;
   background: var(--c-flag-light);
   color: #14141a;
@@ -258,11 +307,12 @@ input[type="text"]:focus {
   font-size: 4mm;
 }
 .flag-name::placeholder { color: #14141a; opacity: .55; }
-.flag-name:hover, .flag-name:focus { background: var(--c-flag-light); }
+.flag-name:hover, .flag-name:focus,
+input[type="text"].flag-name:hover, input[type="text"].flag-name:focus { background: var(--c-flag-light); }
 .flag-stat {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(var(--c-ov), 0.12);
 }
 .flag-stat-vida     { flex: 27; }
 .flag-stat-sanidade { flex: 19; }
@@ -282,11 +332,35 @@ input[type="text"]:focus {
   margin: 0 auto;
   aspect-ratio: 200 / 230;
 }
-.dice-logo-img {
+.dice-logo-img,
+.dice-svg {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
+  overflow: visible;
 }
+
+/* ---- Animação do dado ----
+   As peças giram em torno do próprio centro; o número aparece na face do meio. */
+.dice-body,
+.dice-hole,
+.dice-face-num {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.dice-face-num {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 27px;
+  fill: var(--c-bg);
+  opacity: 0;
+}
+.dice-faces { fill: var(--c-text); }
+.dice-face-num.is-success { fill: var(--c-face-success); }
+.dice-face-num.is-crit    { fill: var(--c-face-crit); font-size: 30px; }
+.dice-roll-btn.is-rolling { cursor: progress; }
+.dice-roll-btn.is-rolling:hover,
+.dice-roll-btn.is-rolling:active { transform: none; }
 
 /* ---- Saúde / Sanidade ---- */
 .status-tables { font-family: var(--f-serif); }
@@ -348,8 +422,8 @@ input[type="text"]:focus {
   border-radius: 3.6mm;
   padding: 0 2.5mm;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.12);
-  border: .3mm solid rgba(255, 255, 255, 0.5);
+  background: rgba(var(--c-ov), 0.12);
+  border: .3mm solid rgba(var(--c-ov), 0.5);
 }
 .bar-fill {
   position: absolute;
@@ -445,25 +519,6 @@ input[type="text"]:focus {
   flex-direction: column;
   gap: 2mm;
 }
-.roll-mode-toggle {
-  display: flex;
-  gap: 2mm;
-  justify-content: center;
-}
-.roll-mode-btn {
-  background: transparent;
-  border: .35mm solid var(--c-text);
-  border-radius: 4mm;
-  color: var(--c-text);
-  font-family: var(--f-sans);
-  font-weight: 700;
-  font-size: 3mm;
-  padding: 1mm 3mm;
-}
-.roll-mode-btn.active {
-  background: var(--c-text);
-  color: #000;
-}
 .roll-result {
   flex: 1;
   font-family: var(--f-sans);
@@ -476,6 +531,7 @@ input[type="text"]:focus {
   opacity: .6;
   margin: auto;
 }
+.roll-empty-sub { display: block; margin-top: 1.5mm; font-size: 2.6mm; }
 .roll-line { display: flex; justify-content: space-between; gap: 2mm; }
 .roll-line strong { font-weight: 700; }
 .roll-dice-values {
@@ -495,26 +551,44 @@ input[type="text"]:focus {
   font-size: 2.8mm;
   font-weight: 700;
 }
-.roll-die.success { background: var(--c-text); color: #000; }
+.roll-die.success { background: var(--c-text); color: var(--c-bg); }
 .roll-die.crit { background: var(--c-vida); color: #fff; border-color: var(--c-vida); }
+.roll-die.pop { animation: rollDiePop .18s ease-out; }
+@keyframes rollDiePop {
+  from { transform: scale(.6); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
 .roll-final {
   font-size: 4mm;
   font-weight: 800;
   text-align: center;
   margin-top: .5mm;
 }
-.roll-quality {
-  text-align: center;
-  font-weight: 800;
-  font-size: 5.6mm;
-  letter-spacing: .02em;
+.roll-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  margin-top: 1mm;
 }
-.roll-quality.q-critfail { color: #ff3b3b; }
-.roll-quality.q-ruim     { color: #ff8a3b; }
-.roll-quality.q-normal   { color: #e8e8e8; }
-.roll-quality.q-bom      { color: #6fd66f; }
-.roll-quality.q-excelente{ color: #3ba9ff; }
-.roll-quality.q-extremo  { color: #ffd23b; }
+.roll-score-num {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 13mm;
+}
+.roll-score-label {
+  font-size: 2.8mm;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-top: .8mm;
+  opacity: .85;
+}
+.res-0 { color: var(--res-0); }
+.res-1 { color: var(--res-1); }
+.res-2 { color: var(--res-2); }
+.res-3 { color: var(--res-3); }
+.res-4 { color: var(--res-4); }
+.res-5 { color: var(--res-5); }
 
 /* ==========================================================================
    ATRIBUTOS / HABILIDADES — grade de listas com pontos
@@ -542,10 +616,10 @@ input[type="text"]:focus {
   margin: 0 -1mm;
   transition: background .12s ease;
 }
-.trait-row:hover { background: rgba(255,255,255,0.06); }
+.trait-row:hover { background: rgba(var(--c-ov),0.06); }
 .trait-row.selected {
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 0 0 .35mm #ffffff;
+  background: rgba(var(--c-ov), 0.16);
+  box-shadow: inset 0 0 0 .35mm var(--c-text);
 }
 .trait-label {
   font-family: var(--f-sans);
@@ -603,7 +677,7 @@ input[type="text"]:focus {
   background-image: repeating-linear-gradient(
     to bottom,
     transparent, transparent 6.9mm,
-    rgba(255,255,255,0.35) 6.9mm, rgba(255,255,255,0.35) 7.1mm
+    rgba(var(--c-ov),0.35) 6.9mm, rgba(var(--c-ov),0.35) 7.1mm
   );
 }
 
@@ -734,7 +808,7 @@ input.weapon-extra-line {
    IMPRESSÃO
    ========================================================================== */
 @media print {
-  html, body { background: #fff; }
+  html, body { background: var(--c-bg); }
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -747,9 +821,14 @@ input.weapon-extra-line {
     margin: 0;
     width: 210mm;
     min-height: 297mm;
-    page-break-after: always;
   }
-  .page:last-child { page-break-after: auto; }
+  .page + .page { break-before: page; page-break-before: always; }
+  /* Anotações: só saem se tiverem texto (e se a opção estiver ligada) */
+  .notes-page { display: none !important; min-height: 0; }
+  .notes-page.tem-texto { display: block !important; }
+  html.sem-notas-pdf .notes-page { display: none !important; }
+  .notes-text { display: none !important; }
+  .notes-page .notes-print { display: block; }
   @page {
     size: A4;
     margin: 0;
@@ -761,4 +840,154 @@ input.weapon-extra-line {
    ========================================================================== */
 @media (max-width: 210mm) {
   .sheet-wrapper { align-items: flex-start; overflow-x: auto; }
+}
+
+
+/* ==========================================================================
+   ABA LATERAL DE CONFIGURAÇÕES (abre pela esquerda)
+   ========================================================================== */
+.cfg-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  background: rgba(0, 0, 0, .5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s ease, visibility 0s linear .25s;
+}
+.cfg-backdrop.open { opacity: 1; visibility: visible; transition-delay: 0s; }
+
+.cfg-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 200;
+  width: min(320px, 86vw);
+  padding: 16px 18px 24px;
+  overflow-y: auto;
+  background: #1a1a1a;
+  color: #eee;
+  border-right: 1px solid #333;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, .5);
+  font-family: var(--f-sans);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform .25s ease, visibility 0s linear .25s;
+}
+.cfg-panel.open { transform: none; visibility: visible; transition-delay: 0s; }
+
+.cfg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.cfg-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.cfg-close {
+  background: none;
+  border: none;
+  color: #eee;
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 4px;
+}
+.cfg-group { padding: 14px 0; border-top: 1px solid #2c2c2c; }
+.cfg-group h3 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+.cfg-seg { display: flex; border: 1px solid #555; border-radius: 6px; overflow: hidden; }
+.cfg-seg button {
+  flex: 1;
+  background: transparent;
+  color: #eee;
+  border: none;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.cfg-seg button + button { border-left: 1px solid #555; }
+.cfg-seg button:hover { background: #2a2a2a; }
+.cfg-seg button.active { background: #eee; color: #111; font-weight: 700; }
+.cfg-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cfg-seg + .cfg-switch { margin-top: 14px; }
+.cfg-switch input { width: 16px; height: 16px; accent-color: #eee; }
+.cfg-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: #9a9a9a; }
+
+/* ==========================================================================
+   ANOTAÇÕES — página extra, minimalista, que cresce conforme se escreve
+   ========================================================================== */
+.notes-page { display: none; overflow: visible; height: auto; }
+.notes-page.open { display: block; }
+.notes-text {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--page-h) - 18mm);
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  color: var(--c-text);
+  font-family: var(--f-sans);
+  font-size: 3.6mm;
+  line-height: 1.7;
+}
+.notes-print {
+  display: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--f-sans);
+  font-size: 3.6mm;
+  line-height: 1.7;
+}
+.notes-min {
+  position: absolute;
+  top: 3mm;
+  right: 4mm;
+  z-index: 2;
+  width: 8mm;
+  height: 8mm;
+  border: .3mm solid rgba(var(--c-ov), .45);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-text);
+  font-size: 5mm;
+  line-height: 1;
+  padding: 0;
+  opacity: .55;
+}
+.notes-min:hover { opacity: 1; }
+
+.notes-add-wrap { display: flex; justify-content: center; margin-top: -8px; }
+.notes-add-wrap.oculto { display: none; }
+.notes-add {
+  position: relative;
+  width: 11mm;
+  height: 11mm;
+  border: .35mm solid rgba(255, 255, 255, .55);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .35);
+  color: #fff;
+  font-size: 6.5mm;
+  line-height: 1;
+  padding: 0;
+}
+.notes-add:hover { background: rgba(0, 0, 0, .6); border-color: #fff; }
+.notes-add.tem-texto::after {
+  content: '';
+  position: absolute;
+  top: .6mm;
+  right: .6mm;
+  width: 2.2mm;
+  height: 2.2mm;
+  border-radius: 50%;
+  background: #fff;
 }
