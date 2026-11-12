@@ -538,7 +538,34 @@ function collectState() {
   return state;
 }
 
+/** Resumo da ficha para a página inicial (nome, barras e estados). Só neste navegador. */
+function gravarResumo() {
+  if (window.FICHA_TEMP) return; // olhando a ficha de outra pessoa: não mexe no resumo da minha
+  try {
+    const barra = (nome) => {
+      const g = document.querySelector(`.bar-group[data-bar="${nome}"]`);
+      if (!g) return null;
+      return { cur: parseInt(g.querySelector('.bar-current').textContent, 10) || 0, max: parseInt(g.querySelector('.bar-max').textContent, 10) || 0 };
+    };
+    const estado = (grupo) => {
+      const r = document.querySelector(`.status-row.checked[data-group="${grupo}"] .status-label`);
+      return r ? r.textContent.trim() : '';
+    };
+    const nome = document.querySelector('input[data-key="nome-personagem"]');
+    const foto = document.getElementById('portraitImg-main');
+    const resumo = {
+      nome: nome ? nome.value.trim() : '',
+      vida: barra('vida'), sanidade: barra('sanidade'), forca: barra('forca'),
+      saude: estado('saude'), sanidadeEstado: estado('sanidade'),
+      retrato: foto && foto.getAttribute('src') && foto.getAttribute('src').length < 200000 ? foto.getAttribute('src') : null,
+      em: Date.now(),
+    };
+    localStorage.setItem('bhcResumo_v1', JSON.stringify(resumo));
+  } catch (err) { /* o resumo é opcional */ }
+}
+
 function saveState() {
+  gravarResumo();
   // Ficha conectada à Artemis: salva no Firebase em vez do navegador
   if (window.ARTEMIS_ONLINE) {
     if (window.ArtemisOnline && window.ArtemisOnline.ativo) {
@@ -631,6 +658,7 @@ function applyState(state) {
   });
 
   refreshNotes(true); // abre a página de anotações se houver texto salvo
+  gravarResumo();
 }
 
 let flashTimeout = null;
@@ -1011,6 +1039,49 @@ async function renderClassico(attr, skill, penalty) {
   registrar();
 }
 
+/* --------------------------------------------------------------------------
+   INICIATIVA: 1d12 + Destreza + Raciocínio, com as penalidades de Saúde e
+   Sanidade descontadas do total. Não vai para o log do Discord.
+   -------------------------------------------------------------------------- */
+function valorDoAtributo(prefixo) {
+  const norm = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const row = [...document.querySelectorAll('.trait-row[data-role="attribute"]')]
+    .find((r) => norm(r.querySelector('.trait-label').textContent.trim()).startsWith(prefixo));
+  if (!row) return { nome: prefixo, value: 0 };
+  return {
+    nome: row.querySelector('.trait-label').textContent.trim(),
+    value: parseInt(row.querySelector('.dots').dataset.value, 10) || 0,
+  };
+}
+
+async function rolarIniciativa() {
+  if (diceRolling) return;
+  const des = valorDoAtributo('destreza');
+  const rac = valorDoAtributo('racioc');
+  const penalty = getHealthPenalty();
+  const natural = rollD12();
+  const total = natural + des.value + rac.value + penalty;
+
+  const html = `
+    <div class="roll-line"><span>Modo</span><strong>Iniciativa</strong></div>
+    <div class="roll-line"><span>d12 natural</span><strong>${natural}</strong></div>
+    <div class="roll-line"><span>${des.nome}</span><strong>${des.value}</strong></div>
+    <div class="roll-line"><span>${rac.nome}</span><strong>${rac.value}</strong></div>
+    <div class="roll-line"><span>Penalidades</span><strong>${penalty}</strong></div>
+    <div class="roll-final">Iniciativa: ${total}</div>
+  `;
+  const box = document.getElementById('rollResult');
+  if (!animarDado) { box.innerHTML = html; return; }
+  box.innerHTML = '<p class="roll-empty">Rolando...</p>';
+  const fim = await animateDice([natural], () => '', () => { box.innerHTML = html; });
+  if (fim === 'pulado') box.innerHTML = html;
+}
+
+function wireIniciativa() {
+  const b = document.getElementById('btnIniciativa');
+  if (b) b.addEventListener('click', rolarIniciativa);
+}
+
 /* ==========================================================================
    5c) CONFIGURAÇÕES — aba lateral (abre pela esquerda)
    Ficam só neste navegador (não vão para a ficha nem para a Artemis).
@@ -1298,8 +1369,13 @@ document.addEventListener('DOMContentLoaded', () => {
   wireToolbar();
   wireDelegatedInput();
   wireRollSystem();
+  wireIniciativa();
   wireNotes();
   wireSettings();
+
+  // Atalhos vindos da página inicial: ficha.html#config e ficha.html#anotacoes
+  if (location.hash === '#config') setCfgPanel(true);
+  if (location.hash === '#anotacoes') setNotesOpen(true, true);
 
   // Restaura dados salvos (se existirem), sobrepondo os padrões.
   // Com a ficha conectada à Artemis, quem carrega os dados é o integracao.js.

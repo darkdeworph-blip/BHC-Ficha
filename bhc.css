@@ -1,0 +1,186 @@
+/* ==========================================================================
+   IDENTIDADE VISUAL — BLACK HOLE CLUBE (página inicial e mesa)
+   Preto, branco e o vermelho do buraco negro, como no livro de regras.
+   A ficha (style.css) continua com o visual dela; aqui só entram a página
+   inicial e a mesa.
+   ========================================================================== */
+:root {
+  --bg: #000;
+  --txt: #fff;
+  --muted: #a6a6a6;
+  --linha: #2b2b2b;
+  --linha-forte: #5a5a5a;
+  --vermelho: #cc0000;
+  --vermelho-vivo: #ff3131;
+  --roxo: #8b2be2;
+  --roxo-claro: #b77cf0;
+  --sanidade: #561269;
+  --vontade: #cc7a00;
+  --creme: #f3e6d4;
+  --fora: #4b4b4b;
+  --ok: #35c46b;
+  --f-corpo: Arial, Helvetica, sans-serif;
+  --f-titulo: 'Orbitron', 'IBM Plex Sans Condensed', Arial, sans-serif;
+  --raio: 8px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f-corpo); }
+body { min-height: 100vh; -webkit-text-size-adjust: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--f-corpo); }
+h1, h2, h3 { margin: 0; }
+:focus-visible { outline: 2px solid var(--vermelho-vivo); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[hidden] { display: none !important; }
+
+/* ---------- barra do topo ---------- */
+.bhc-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 40px; border-bottom: 1px solid var(--linha); background: var(--bg);
+}
+.bhc-marca { display: flex; align-items: center; gap: 12px; }
+.bhc-marca svg { width: 38px; height: 38px; }
+.bhc-marca span { font-family: var(--f-titulo); font-weight: 700; font-size: 17px; letter-spacing: .1em; text-transform: uppercase; }
+.bhc-top-dir { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bhc-status { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.bhc-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--linha-forte); display: block; }
+.bhc-status.ok i { background: var(--ok); }
+.bhc-status.erro i { background: var(--vermelho-vivo); }
+.bhc-quadro { width: 44px; height: 44px; border-radius: var(--raio); border: 1px solid #fff; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.bhc-quadro:hover { background: #1a1a1a; }
+.bhc-quadro svg { width: 20px; height: 20px; }
+.bhc-eu { display: flex; align-items: center; gap: 10px; }
+.bhc-eu .av { width: 40px; height: 40px; border-radius: 50%; background: #d8dce6; color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; overflow: hidden; }
+.bhc-eu .av img { width: 100%; height: 100%; object-fit: cover; }
+.bhc-eu div { display: flex; flex-direction: column; line-height: 1.3; }
+.bhc-eu strong { font-size: 13px; }
+.bhc-eu span { font-size: 12px; color: var(--muted); }
+
+/* ---------- botões ---------- */
+.bhc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 22px;
+  border-radius: 999px; border: 1px solid #fff; background: transparent; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap;
+}
+.bhc-btn:hover { background: #1a1a1a; }
+.bhc-btn.verm { background: var(--vermelho); border-color: var(--vermelho); }
+.bhc-btn.verm:hover { background: #e00000; }
+.bhc-btn.perigo { border-color: var(--vermelho-vivo); color: var(--vermelho-vivo); }
+.bhc-btn.mini { min-height: 36px; padding: 0 14px; font-size: 12.5px; }
+.bhc-btn[disabled] { opacity: .45; cursor: default; }
+.bhc-btn svg { width: 18px; height: 18px; }
+
+.bhc-seg { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid #fff; font-size: 14px; font-weight: 700; }
+.bhc-seg a, .bhc-seg button {
+  min-height: 38px; min-width: 96px; padding: 0 22px; border-radius: 999px; border: 0; background: transparent; color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer;
+}
+.bhc-seg .on { background: var(--vermelho); color: #fff; }
+
+/* ---------- página inicial ---------- */
+.bhc-main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 36px 40px 44px; display: flex; flex-direction: column; gap: 30px; }
+
+.bhc-hero { position: relative; overflow: hidden; min-height: 250px; border: 1px solid #3a3a3a; border-radius: 12px; background: #000; display: flex; align-items: center; }
+.bhc-hero .arte { position: absolute; right: 0; top: 0; bottom: 0; width: 62%; }
+.bhc-hero .arte svg { width: 100%; height: 100%; display: block; }
+.bhc-hero .veu { position: absolute; left: 0; top: 0; bottom: 0; width: 70%; background: linear-gradient(90deg, #000 45%, rgba(0,0,0,.88) 65%, rgba(0,0,0,0)); }
+.bhc-hero .texto { position: relative; z-index: 1; padding: 34px 40px; display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
+.bhc-hero .ola { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.bhc-hero h1 { font-family: var(--f-titulo); font-weight: 900; font-size: 40px; line-height: 1.15; letter-spacing: .03em; overflow-wrap: anywhere; }
+.bhc-hero .sessao { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+.bhc-hero .sessao svg { width: 22px; height: 22px; flex: none; }
+.bhc-hero .sessao .rot { color: var(--muted); }
+
+.bhc-div { display: flex; align-items: center; gap: 14px; width: 100%; }
+.bhc-div::before, .bhc-div::after { content: ''; flex: 1; height: 1px; background: #8a8a8a; }
+.bhc-div svg { width: 40px; height: 40px; flex: none; }
+
+.bhc-cartoes { display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch; }
+.bhc-card { border: 1px solid #fff; border-radius: 12px; background: #000; padding: 28px; display: flex; flex-direction: column; gap: 18px; min-height: 340px; min-width: 0; position: relative; overflow: hidden; }
+.bhc-card.mesa { flex: 3 1 560px; }
+.bhc-card.ficha { flex: 2 1 340px; }
+.bhc-card h2 { font-family: var(--f-titulo); font-weight: 700; font-size: 28px; color: var(--vermelho); letter-spacing: .04em; }
+.bhc-card .linha { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bhc-card .selo { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; border: 1px solid #fff; font-size: 12px; font-weight: 700; }
+.bhc-card .selo i { width: 8px; height: 8px; border-radius: 50%; background: var(--linha-forte); display: block; }
+.bhc-card .selo.vivo i { background: var(--ok); }
+.bhc-card .sub { position: relative; z-index: 1; font-size: 14px; color: var(--muted); }
+.bhc-rot { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--roxo); font-weight: 700; }
+.bhc-gente { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; }
+.bhc-gente .p { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.bhc-gente .p b { width: 28px; height: 28px; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.bhc-gente .p small { color: var(--muted); font-weight: 400; font-size: 12px; }
+.bhc-gente .vazio { font-size: 13px; color: var(--muted); }
+.bhc-miniatura { position: absolute; right: -24px; bottom: -34px; width: 52%; height: 68%; border-radius: 12px; background-color: #050505; background-image: radial-gradient(#2a2a2a 1px, transparent 1px); background-size: 22px 22px; border: 1px solid #4a4a4a; transform: rotate(-4deg); overflow: hidden; background-position: center; }
+.bhc-miniatura.com-mapa { background-size: cover; }
+.bhc-miniatura i { position: absolute; border-radius: 4px; background: #121212; border: 1px solid #555; }
+.bhc-miniatura b { position: absolute; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #000; }
+.bhc-card .acao { position: relative; z-index: 1; align-self: flex-start; margin-top: auto; }
+
+.bhc-boneco-card { display: flex; align-items: center; gap: 0; }
+.bhc-boneco-card .foto { position: relative; z-index: 1; width: 64px; height: 64px; border-radius: 50%; background: #d8dce6; overflow: hidden; flex: none; }
+.bhc-boneco-card .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bhc-boneco-card .nome { flex: 1; min-width: 0; height: 50px; margin-left: -18px; padding: 0 12px 0 26px; background: #1f1f1f; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; font-size: 16px; }
+.bhc-boneco-card .nome span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bhc-boneco-card .nome small { font-size: 11px; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.bhc-barras { display: flex; flex-direction: column; gap: 9px; }
+.bhc-barra { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; }
+.bhc-barra > span:first-child { width: 62px; }
+.bhc-barra > span:last-child { width: 44px; text-align: right; }
+.bhc-barra .tr { flex: 1; height: 10px; border-radius: 99px; background: #1a1a1a; border: 1px solid #444; }
+.bhc-barra .tr i { display: block; height: 8px; border-radius: 99px; }
+
+.bhc-atalhos { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+.bhc-atalho { padding: 20px; border-radius: var(--raio); border: 1px solid var(--linha-forte); background: #000; display: flex; flex-direction: column; gap: 12px; min-height: 140px; }
+.bhc-atalho:hover { border-color: #fff; }
+.bhc-atalho .topo { display: flex; justify-content: space-between; align-items: center; }
+.bhc-atalho svg { width: 28px; height: 28px; }
+.bhc-atalho strong { font-size: 16px; color: var(--vermelho); }
+.bhc-atalho p { margin: 5px 0 0; font-size: 13px; color: var(--muted); }
+.bhc-atalho .tag { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--roxo); color: var(--roxo-claro); font-size: 11px; font-weight: 700; }
+.bhc-atalho[aria-disabled="true"] { opacity: .55; pointer-events: none; }
+
+.bhc-tabela-t { font-family: var(--f-titulo); font-weight: 700; font-size: 20px; color: var(--vermelho); letter-spacing: .04em; text-align: center; margin-bottom: 12px; }
+.bhc-tabela { border: 1px solid #fff; }
+.bhc-tabela .cab, .bhc-tabela .lin { display: grid; grid-template-columns: 1fr 170px; }
+.bhc-tabela .cab { font-weight: 700; font-size: 14px; color: var(--vermelho); text-align: center; }
+.bhc-tabela .cab span, .bhc-tabela .lin span { padding: 12px 16px; }
+.bhc-tabela .cab span:first-child, .bhc-tabela .lin span:first-child { border-right: 1px solid #fff; }
+.bhc-tabela .lin { border-top: 1px solid #fff; font-size: 14px; font-weight: 700; }
+.bhc-tabela .lin span:last-child { color: var(--muted); font-weight: 400; font-size: 13px; }
+.bhc-tabela .vazio { border-top: 1px solid #fff; padding: 14px 16px; font-size: 13px; color: var(--muted); text-align: center; }
+
+.bhc-rodape { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.bhc-rodape .nota { font-size: 12px; color: #8a8a8a; text-align: center; }
+
+/* ---------- gaveta do menu ---------- */
+.bhc-fundo-gaveta { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.65); }
+.bhc-gaveta { position: fixed; top: 0; right: 0; bottom: 0; width: 320px; max-width: 92%; z-index: 51; background: #000; border-left: 1px solid #fff; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: -12px 0 40px rgba(0,0,0,.6); }
+.bhc-gaveta h2 { font-family: var(--f-titulo); font-size: 18px; color: var(--vermelho); letter-spacing: .04em; margin-bottom: 6px; }
+.bhc-gaveta a, .bhc-gaveta button.item { display: flex; align-items: center; min-height: 46px; padding: 0 14px; border: 1px solid var(--linha-forte); border-radius: var(--raio); background: transparent; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; text-align: left; }
+.bhc-gaveta a:hover, .bhc-gaveta button.item:hover { border-color: #fff; background: #111; }
+.bhc-gaveta .fim { margin-top: auto; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* ---------- celular ---------- */
+@media (max-width: 720px) {
+  .bhc-top { padding: 10px 16px; }
+  .bhc-marca span { font-size: 13px; }
+  .bhc-marca svg { width: 32px; height: 32px; }
+  .bhc-eu div, .bhc-status { display: none; }
+  .bhc-main { padding: 16px 16px 28px; gap: 18px; }
+  .bhc-hero { min-height: 170px; }
+  .bhc-hero .arte { width: 80%; }
+  .bhc-hero .texto { padding: 18px 18px; gap: 8px; max-width: 78%; }
+  .bhc-hero h1 { font-size: 21px; }
+  .bhc-hero .sessao { font-size: 12.5px; }
+  .bhc-card { padding: 18px; min-height: 0; gap: 12px; }
+  .bhc-card h2 { font-size: 20px; }
+  .bhc-miniatura { position: relative; right: auto; bottom: auto; width: 100%; height: 90px; transform: none; border-radius: 8px; }
+  .bhc-atalhos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .bhc-atalho { min-height: 0; padding: 12px 14px; gap: 4px; }
+  .bhc-atalho .topo svg { display: none; }
+  .bhc-atalho strong { font-size: 13px; }
+  .bhc-atalho p { font-size: 11px; margin-top: 2px; }
+  .bhc-tabela .cab, .bhc-tabela .lin { grid-template-columns: 1fr 100px; }
+  .bhc-tabela .cab span, .bhc-tabela .lin span { padding: 10px; }
+}

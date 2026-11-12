@@ -2,351 +2,154 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-<title>Ficha Universal — Black Hole Club</title>
-
-<!-- Fontes originais identificadas nos metadados do PDF de referência -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Black Hole Clube</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=Open+Sans:wght@400;600;700;800&family=Sorts+Mill+Goudy&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bhc.css">
 <script>
-  // Aplica o tema salvo antes da página aparecer (evita piscar no modo claro).
-  try {
-    var c = JSON.parse(localStorage.getItem('bhcConfig_v1') || '{}');
-    if (c.tema === 'claro') document.documentElement.classList.add('tema-claro');
-    if (c.notasNoPdf === false) document.documentElement.classList.add('sem-notas-pdf');
-  } catch (e) {}
-  // Fundo personalizado (imagem escolhida na aba de configurações)
-  try {
-    var f = localStorage.getItem('bhcFundo_v1');
-    if (f) {
-      document.documentElement.style.setProperty('--fundo-img', 'url("' + f.replace(/["\\\n\r]/g, encodeURIComponent) + '")');
-      document.documentElement.classList.add('tem-fundo');
+  // Links antigos da Artemis (/ficha link) apontavam para esta página: a ficha agora é ficha.html.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (q.has('f') && q.has('s')) {
+      location.replace('ficha.html' + location.search + location.hash);
     }
-  } catch (e) {}
+  })();
 </script>
 </head>
 <body>
 
-<!-- Barra de ferramentas fixa (não aparece na impressão) -->
-<div class="toolbar no-print">
-  <div class="toolbar-left">
-    <button id="btnCfg" class="toolbar-cfg" type="button" aria-label="Abrir configurações" aria-controls="cfgPanel">
-      <svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M1 1.5h16M1 7h16M1 12.5h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+<!-- ícones usados na página (desenhados uma vez só) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="d20" viewBox="0 0 100 100">
+    <polygon points="50,3 96,27 96,73 50,97 4,73 4,27" fill="#fff"/>
+    <polygon points="34,40 66,40 50,68" fill="none" stroke="#000" stroke-width="2.5"/>
+    <path d="M50 3L34 40M50 3L66 40M4 27L34 40M96 27L66 40M4 73L34 40M96 73L66 40M50 97L50 68M4 73L50 68M96 73L50 68M4 27L4 73M96 27L96 73" stroke="#000" stroke-width="2.2" fill="none"/>
+    <ellipse cx="50" cy="52" rx="19" ry="8" fill="none" stroke="#CC0000" stroke-width="3.5" transform="rotate(-8 50 52)"/>
+  </symbol>
+</svg>
+
+<header class="bhc-top">
+  <a class="bhc-marca" href="./" aria-label="Black Hole Clube — início">
+    <svg aria-hidden="true"><use href="#d20"/></svg>
+    <span>Black Hole Clube</span>
+  </a>
+  <div class="bhc-top-dir">
+    <span class="bhc-status" id="status"><i></i><span id="statusTxt">Modo local</span></span>
+    <button class="bhc-quadro" id="btnMenu" type="button" aria-label="Menu" aria-haspopup="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
-    <span class="toolbar-title">Ficha Universal · Black Hole Club</span>
+    <div class="bhc-eu" id="eu" hidden>
+      <div class="av" id="euAv">?</div>
+      <div><strong id="euNome"></strong><span id="euPapel"></span></div>
+    </div>
   </div>
-  <div class="toolbar-actions">
-    <button id="btnPrint" type="button">Imprimir / Salvar PDF</button>
-    <button id="btnReset" type="button">Limpar ficha</button>
-    <span id="artemisStatus" class="artemis-status" aria-live="polite"></span>
-    <span id="saveIndicator" class="save-indicator" aria-live="polite"></span>
-  </div>
-</div>
+</header>
 
-<!-- Aba lateral de configurações (abre pela esquerda; não aparece na impressão) -->
-<div class="cfg-backdrop no-print" id="cfgBackdrop"></div>
-<aside class="cfg-panel no-print" id="cfgPanel" aria-label="Configurações" aria-hidden="true">
-  <div class="cfg-head">
-    <h2>Configurações</h2>
-    <button id="cfgClose" class="cfg-close" type="button" aria-label="Fechar configurações">&times;</button>
-  </div>
+<main class="bhc-main">
 
-  <section class="cfg-group">
-    <h3>Aparência</h3>
-    <div class="cfg-seg" data-cfg="tema" role="group" aria-label="Tema">
-      <button type="button" data-value="escuro">Escuro</button>
-      <button type="button" data-value="claro">Claro</button>
+  <section class="bhc-hero" aria-label="Campanha">
+    <div class="arte" aria-hidden="true"><svg width="100%" height="100%" viewBox="0 0 520 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:block"><rect width="520" height="300" fill="#060001"/><circle cx="30" cy="40" r="1.4" fill="#f7d6bf" opacity="0.9"/><circle cx="70" cy="250" r="1.1" fill="#f7d6bf" opacity="0.7"/><circle cx="120" cy="90" r="1" fill="#f7d6bf" opacity="0.6"/><circle cx="450" cy="50" r="1.5" fill="#f7d6bf" opacity="0.9"/><circle cx="490" cy="200" r="1.2" fill="#f7d6bf" opacity="0.8"/><circle cx="400" cy="270" r="1" fill="#f7d6bf" opacity="0.6"/><circle cx="330" cy="30" r="1.1" fill="#f7d6bf" opacity="0.7"/><circle cx="60" cy="170" r="1.2" fill="#f7d6bf" opacity="0.8"/><circle cx="510" cy="110" r="1" fill="#f7d6bf" opacity="0.6"/><circle cx="150" cy="270" r="1.3" fill="#f7d6bf" opacity="0.8"/><path d="M90 50h10M95 45v10" stroke="#f7d6bf" stroke-width="1.2" opacity=".8"/><path d="M465 150h10M470 145v10" stroke="#f7d6bf" stroke-width="1.2" opacity=".8"/><path d="M375 40h10M380 35v10" stroke="#f7d6bf" stroke-width="1.2" opacity=".8"/><g transform="rotate(-14 260 150)"><ellipse cx="260" cy="150" rx="255" ry="64" fill="#5e0716"/><ellipse cx="260" cy="150" rx="218" ry="52" fill="#9c0f26"/><ellipse cx="260" cy="150" rx="182" ry="41" fill="#d42a4f"/><ellipse cx="260" cy="150" rx="148" ry="32" fill="#f06f93"/><ellipse cx="260" cy="150" rx="114" ry="23" fill="#f7d6bf"/></g><circle cx="260" cy="150" r="54" fill="#000"/><path d="M206 150A54 54 0 0 1 314 150" fill="none" stroke="#f7d6bf" stroke-width="7"/><path d="M206 150A54 54 0 0 1 314 150" fill="none" stroke="#f06f93" stroke-width="3" transform="translate(0 -9) scale(1)" opacity=".0"/><path d="M204 160Q262 196 322 140" fill="none" stroke="#d42a4f" stroke-width="12" stroke-linecap="round"/><path d="M208 158Q262 190 318 140" fill="none" stroke="#f7d6bf" stroke-width="4" stroke-linecap="round"/></svg></div>
+    <div class="veu" aria-hidden="true"></div>
+    <div class="texto">
+      <span class="ola" id="ola">Bem-vindo</span>
+      <h1 id="campanha">Black Hole Clube</h1>
+      <div class="sessao">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#CC0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <span><span class="rot">Próxima sessão</span> &nbsp;<strong id="proxima">a combinar</strong></span>
+      </div>
     </div>
   </section>
 
-  <section class="cfg-group">
-    <h3>Rolagem</h3>
-    <div class="cfg-seg" data-cfg="modo" role="group" aria-label="Modo de rolagem">
-      <button type="button" data-value="narrativo">Narrativo</button>
-      <button type="button" data-value="classico">Clássico</button>
-    </div>
-    <div class="cfg-sub" id="cfgDadoRow" hidden>
-      <label for="cfgDado">Tipo de dado do Modo Clássico</label>
-      <select id="cfgDado" class="cfg-select" data-cfg="dado">
-        <option value="4">d4</option>
-        <option value="6">d6</option>
-        <option value="8">d8</option>
-        <option value="10">d10</option>
-        <option value="12">d12</option>
-        <option value="20">d20</option>
-        <option value="100">d100</option>
-      </select>
-    </div>
-    <label class="cfg-switch">
-      <input type="checkbox" data-cfg="animacao">
-      <span>Animação do dado</span>
-    </label>
-    <p class="cfg-hint">Com a animação ligada, clique no dado durante a rolagem para pular direto ao resultado.</p>
+  <div class="bhc-div" aria-hidden="true"><svg><use href="#d20"/></svg></div>
+
+  <section class="bhc-cartoes">
+    <a class="bhc-card mesa" href="mesa.html" id="cartaoMesa">
+      <div class="linha">
+        <h2>Mesa</h2>
+        <span class="selo" id="seloMesa"><i></i><span id="seloMesaTxt">Mesa fechada</span></span>
+      </div>
+      <span class="sub" id="cenaAtual">Entre pelo link que a Artemis manda com /mesa.</span>
+      <div class="bhc-gente">
+        <span class="bhc-rot">Na mesa agora</span>
+        <div id="gente"><span class="vazio" style="font-size:13px;color:#a6a6a6">Ninguém conectado.</span></div>
+      </div>
+      <div class="bhc-miniatura" id="miniatura" aria-hidden="true">
+        <i style="left:10%;top:16%;width:38%;height:50%"></i>
+        <i style="left:54%;top:24%;width:34%;height:56%"></i>
+        <b style="left:22%;top:30%;background:#F3E6D4"></b>
+        <b style="left:36%;top:44%;background:#D9DEEB"></b>
+        <b style="left:68%;top:40%;background:#CC0000"></b>
+      </div>
+      <span class="bhc-btn verm acao">Entrar na mesa
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="bhc-card ficha" href="ficha.html" id="cartaoFicha">
+      <h2>Minha ficha</h2>
+      <div class="bhc-boneco-card">
+        <div class="foto" id="fichaFoto"><svg width="64" height="64" viewBox="0 0 98 98" aria-hidden="true"><circle cx="49" cy="38" r="17" fill="#8A91A6"/><ellipse cx="49" cy="96" rx="31" ry="30" fill="#8A91A6"/></svg></div>
+        <div class="nome"><span id="fichaNome">Personagem sem nome</span><small id="fichaEstado"></small></div>
+      </div>
+      <div class="bhc-barras">
+        <div class="bhc-barra"><span>Vida</span><div class="tr"><i id="bVida" style="width:0;background:#CC0000"></i></div><span id="tVida">0/0</span></div>
+        <div class="bhc-barra"><span>Sanidade</span><div class="tr"><i id="bSani" style="width:0;background:#561269"></i></div><span id="tSani">0/0</span></div>
+        <div class="bhc-barra"><span>Vontade</span><div class="tr"><i id="bForca" style="width:0;background:#CC7A00"></i></div><span id="tForca">0/0</span></div>
+      </div>
+      <span class="sub" id="fichaSync" style="margin-top:auto">Salva neste navegador.</span>
+      <span class="bhc-btn acao">Abrir ficha</span>
+    </a>
   </section>
 
-  <section class="cfg-group">
-    <h3>Fundo do site</h3>
-    <p class="cfg-hint" style="margin-top:0">Troca só o fundo vazio, atrás da ficha. Vale apenas neste navegador.</p>
-    <div class="cfg-row">
-      <button type="button" class="cfg-btn" id="fundoEscolher">Enviar imagem</button>
-      <button type="button" class="cfg-btn" id="fundoRemover">Remover</button>
-    </div>
-    <input id="fundoArquivo" type="file" accept="image/*" hidden>
-    <div class="cfg-sub">
-      <label for="fundoUrl">Ou endereço (link) da imagem</label>
-      <input id="fundoUrl" class="cfg-input" type="text" placeholder="https://..." autocomplete="off" spellcheck="false">
-      <div class="cfg-row"><button type="button" class="cfg-btn" id="fundoUsarUrl">Usar este link</button></div>
-    </div>
-    <p class="cfg-msg" id="fundoMsg" aria-live="polite"></p>
+  <section class="bhc-atalhos" aria-label="Atalhos">
+    <a class="bhc-atalho" href="mesa.html#fichas" id="atFichas" hidden>
+      <div class="topo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.7 0 4.5 1.8 4.5 4.5"/></svg>
+        <span class="tag">Só mestre</span></div>
+      <div><strong>Fichas da mesa</strong><p>Ver e ajustar todos os personagens</p></div>
+    </a>
+    <a class="bhc-atalho" href="ficha.html#anotacoes">
+      <div class="topo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 12h8M8 16h6"/></svg></div>
+      <div><strong>Anotações</strong><p>Páginas livres, salvas no PDF</p></div>
+    </a>
+    <a class="bhc-atalho" href="#" id="atLivro" aria-disabled="true">
+      <div class="topo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5V21h16"/></svg></div>
+      <div><strong>Livro de regras</strong><p id="livroTxt">Em breve</p></div>
+    </a>
+    <a class="bhc-atalho" href="ficha.html#config">
+      <div class="topo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></div>
+      <div><strong>Configurações</strong><p>Tema, rolagem e fundo do site</p></div>
+    </a>
   </section>
 
-  <section class="cfg-group">
-    <h3>Anotações</h3>
-    <label class="cfg-switch">
-      <input type="checkbox" data-cfg="notasNoPdf">
-      <span>Incluir as anotações no PDF</span>
-    </label>
+  <section id="atividade" hidden>
+    <h2 class="bhc-tabela-t">Atividade recente</h2>
+    <div class="bhc-tabela">
+      <div class="cab"><span>O que aconteceu</span><span>Quando</span></div>
+      <div id="atividadeLista"></div>
+    </div>
   </section>
+
+  <footer class="bhc-rodape">
+    <div class="bhc-div" aria-hidden="true"><svg width="44" height="53" viewBox="0 0 100 120" aria-hidden="true" style="display:block;flex:none"><defs><linearGradient id="vzind2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1464"/><stop offset=".55" stop-color="#4a1d8f"/><stop offset="1" stop-color="#b0357f"/></linearGradient></defs><rect x="30" y="98" width="15" height="18" rx="6" fill="#f3e6d4"/><rect x="55" y="98" width="15" height="18" rx="6" fill="#f3e6d4"/><rect x="24" y="60" width="52" height="44" rx="18" fill="#f3e6d4" stroke="#d9c4ad" stroke-width="1.5"/><rect x="24" y="74" width="52" height="6" fill="#e9a3b8"/><circle cx="19" cy="82" r="9" fill="#f3e6d4" stroke="#d9c4ad" stroke-width="1.5"/><circle cx="81" cy="82" r="9" fill="#f3e6d4" stroke="#d9c4ad" stroke-width="1.5"/><circle cx="50" cy="38" r="31" fill="#f3e6d4" stroke="#d9c4ad" stroke-width="1.5"/><ellipse cx="50" cy="40" rx="23" ry="19" fill="url(#vzind2)" stroke="#c9b49c" stroke-width="2"/><circle cx="40" cy="34" r="1.6" fill="#fff"/><circle cx="58" cy="30" r="1.2" fill="#fff"/><circle cx="62" cy="46" r="1.4" fill="#fff"/><circle cx="44" cy="48" r="1" fill="#fff"/><ellipse cx="50" cy="40" rx="15" ry="5" fill="none" stroke="#ff7ab6" stroke-width="1.6" transform="rotate(-20 50 40)"/><ellipse cx="38" cy="29" rx="5" ry="3" fill="#fff" opacity=".35" transform="rotate(-30 38 29)"/><g transform="translate(37 82) scale(.26)"><polygon points="50,3 96,27 96,73 50,97 4,73 4,27" fill="#fff" stroke="#000" stroke-width="4"/><ellipse cx="50" cy="52" rx="22" ry="9" fill="none" stroke="#CC0000" stroke-width="7" transform="rotate(-8 50 52)"/></g></svg></div>
+    <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" style="display:block;flex:none"><circle cx="20" cy="20" r="13" fill="none" stroke="#CC0000" stroke-width="3"/><ellipse cx="20" cy="20" rx="19" ry="6.5" fill="none" stroke="#CC0000" stroke-width="2.5" transform="rotate(-15 20 20)"/></svg>
+  </footer>
+</main>
+
+<div class="bhc-fundo-gaveta" id="gavetaFundo" hidden></div>
+<aside class="bhc-gaveta" id="gaveta" aria-label="Menu" hidden>
+  <h2>Menu</h2>
+  <a href="./">Início</a>
+  <a href="mesa.html">Mesa</a>
+  <a href="ficha.html">Minha ficha</a>
+  <a href="ficha.html#config">Configurações</a>
+  <button class="item" id="btnSair" type="button" hidden>Desconectar da Artemis</button>
+  <p class="fim">Os links da mesa e da ficha vêm da Artemis: use /mesa e /ficha link no Discord.</p>
 </aside>
 
-<div class="sheet-wrapper">
-
-  <!-- ======================= PÁGINA 1 ======================= -->
-  <section class="page" id="page1" aria-label="Ficha - Página 1">
-
-    <!-- Cabeçalho: 3 colunas independentes que fluem lado a lado —
-         (retrato→barras) | (logotipo→defesa/deslocamento) | (saúde/sanidade) -->
-    <div class="header-grid">
-
-      <div class="col-left">
-        <div class="portrait-module">
-          <button class="portrait-circle" id="portraitBtn-main" type="button" aria-label="Enviar retrato do personagem" data-portrait="main">
-            <img class="portrait-img" id="portraitImg-main" alt="">
-            <svg class="portrait-placeholder" viewBox="0 0 100 100" aria-hidden="true">
-              <circle cx="50" cy="38" r="16"/>
-              <path d="M18 92c0-20 14-34 32-34s32 14 32 34z"/>
-            </svg>
-          </button>
-          <input class="portrait-input" id="portraitInput-main" type="file" accept="image/*" hidden>
-          <div class="portrait-flag">
-            <input type="text" class="flag-name" data-key="nome-personagem" placeholder="Nome do personagem" aria-label="Nome do personagem">
-            <div class="flag-stat flag-stat-vida" aria-hidden="true"><div class="flag-stat-fill"></div></div>
-            <div class="flag-stat flag-stat-sanidade" aria-hidden="true"><div class="flag-stat-fill"></div></div>
-          </div>
-        </div>
-
-        <!-- Barras de Vida, Sanidade e Força de Vontade -->
-        <div class="bars">
-          <div class="bar-group" data-bar="vida">
-            <div class="bar-label">VIDA</div>
-            <div class="bar bar-vida">
-              <div class="bar-fill"></div>
-              <button class="bar-arrow bar-arrow-left" type="button" aria-label="Diminuir Vida">&#10094;</button>
-              <div class="bar-value"><span class="bar-current" contenteditable="true" inputmode="numeric"></span>/<span class="bar-max" contenteditable="true" inputmode="numeric"></span></div>
-              <button class="bar-arrow bar-arrow-right" type="button" aria-label="Aumentar Vida">&#10095;</button>
-            </div>
-          </div>
-          <div class="bar-group" data-bar="sanidade">
-            <div class="bar-label">SANIDADE</div>
-            <div class="bar bar-sanidade">
-              <div class="bar-fill"></div>
-              <button class="bar-arrow bar-arrow-left" type="button" aria-label="Diminuir Sanidade">&#10094;</button>
-              <div class="bar-value"><span class="bar-current" contenteditable="true" inputmode="numeric"></span>/<span class="bar-max" contenteditable="true" inputmode="numeric"></span></div>
-              <button class="bar-arrow bar-arrow-right" type="button" aria-label="Aumentar Sanidade">&#10095;</button>
-            </div>
-          </div>
-          <div class="bar-group" data-bar="forca">
-            <div class="bar-label">FORÇA DE VONTADE</div>
-            <div class="bar bar-forca">
-              <div class="bar-fill"></div>
-              <button class="bar-arrow bar-arrow-left" type="button" aria-label="Diminuir Força de Vontade">&#10094;</button>
-              <div class="bar-value"><span class="bar-current" contenteditable="true" inputmode="numeric"></span>/<span class="bar-max" contenteditable="true" inputmode="numeric"></span></div>
-              <button class="bar-arrow bar-arrow-right" type="button" aria-label="Aumentar Força de Vontade">&#10095;</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Defesa e Deslocamento (agora abaixo das barras, conforme novo PDF) -->
-        <div class="stats-row">
-          <div class="defesa-block">
-            <h3 class="mini-heading">Defesa</h3>
-            <div class="shield-wrap">
-              <svg class="shield-icon" viewBox="0 0 100 112" aria-hidden="true">
-                <path d="M50 2 L94 18 V56 C94 84 74 100 50 110 C26 100 6 84 6 56 V18 Z"/>
-              </svg>
-              <div class="defesa-value" data-key="defesa-valor" contenteditable="true" inputmode="numeric"></div>
-            </div>
-          </div>
-          <div class="deslocamento-block">
-            <h3 class="mini-heading">Deslocamento</h3>
-            <div class="deslocamento-box" data-key="deslocamento-valor" contenteditable="true"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-center">
-        <button class="logo-module dice-roll-btn" id="diceRollBtn" type="button" aria-label="Rolar dado">
-          <svg class="dice-svg" id="diceSvg" viewBox="10 3 125 142" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <g class="dice-body">
-              <g class="dice-faces" fill="#ffffff">
-              <path d="M 14.38 37.2 C 33.23 26.37 52.08 15.54 71.02 4.81 C 71.06 14.05 71.02 23.27 71.05 32.5 C 52.15 34.07 33.28 35.75 14.4 37.25 Z M 14.38 37.2"/>
-              <path d="M 74.42 4.8 C 93.33 15.54 112.22 26.32 131.07 37.23 C 125.76 36.89 120.49 36.36 115.21 35.96 C 105.7 35.13 96.19 34.33 86.68 33.53 C 82.58 33.2 78.5 32.8 74.38 32.5 C 74.36 23.27 74.38 14.04 74.38 4.82 Z M 74.42 4.8"/>
-              <path d="M 13.69 40.64 C 32.36 39.05 51.03 37.49 69.73 35.91 C 59.56 53.46 49.35 70.97 39.14 88.48 C 38.08 90.24 37.16 92.09 35.96 93.8 C 33.01 87 30.23 80.14 27.35 73.34 C 22.77 62.46 18.27 51.55 13.66 40.68 Z M 13.69 40.64"/>
-              <path d="M 75.75 35.9 C 85.41 36.69 95.08 37.53 104.75 38.34 C 113.74 39.07 122.72 39.91 131.74 40.65 C 124.35 58.41 116.9 76.13 109.49 93.88 C 103.76 84.23 98.17 74.52 92.51 64.85 C 86.91 55.22 81.29 45.6 75.72 35.95 Z M 75.75 35.9"/>
-              <path d="M 58.84 61.17 C 63.48 53.25 68.08 45.32 72.7 37.36 C 84.06 56.86 95.43 76.32 106.77 95.84 C 84.07 95.88 61.4 95.84 38.7 95.86 C 41.21 91.27 43.92 86.81 46.52 82.29 C 50.66 75.27 54.74 68.21 58.84 61.17 Z M 58.84 61.17"/>
-              <path d="M 12.02 45.28 C 12.29 45.67 12.45 46.12 12.63 46.56 C 19.59 63.3 26.64 80 33.61 96.76 C 26.5 100.89 19.41 105 12.27 109.06 C 11.92 106.43 12.07 103.8 12.04 101.19 C 12 82.55 11.97 63.92 11.96 45.29 Z M 12.02 45.28"/>
-              <path d="M 129.62 54.23 C 130.89 51.26 132.07 48.24 133.41 45.27 C 133.45 63.87 133.41 82.43 133.4 101 C 133.34 103.68 133.58 106.38 133.15 109.06 C 126.02 104.99 118.94 100.89 111.84 96.79 C 117.74 82.57 123.69 68.41 129.62 54.23 Z M 129.62 54.23"/>
-              <path d="M 39.24 99.16 C 61.57 99.14 83.9 99.16 106.26 99.17 C 98.97 108.69 91.68 118.18 84.39 127.66 C 80.5 132.75 76.59 137.81 72.71 142.94 C 61.59 128.3 50.34 113.8 39.21 99.2 Z M 39.24 99.16"/>
-              <path d="M 14.12 111.8 C 21.18 107.74 28.24 103.66 35.32 99.6 C 37.32 102.03 39.13 104.59 41.1 107.03 C 49.95 118.64 58.89 130.18 67.74 141.79 C 68.05 142.18 68.34 142.57 68.61 143.03 C 52.42 133.84 36.3 124.59 20.16 115.38 C 18.16 114.18 16.09 113.1 14.12 111.85 Z M 14.12 111.8"/>
-              <path d="M 110.12 99.6 C 112.61 101.1 115.2 102.45 117.68 103.96 C 122.25 106.55 126.78 109.2 131.36 111.83 C 122.21 117.18 112.99 122.36 103.83 127.64 C 99.12 130.34 94.4 133.02 89.69 135.72 C 85.41 138.13 81.19 140.63 76.86 142.99 C 78.79 140.24 80.88 137.65 82.89 135 C 90.65 124.86 98.46 114.75 106.21 104.61 C 107.52 102.95 108.75 101.24 110.08 99.61 Z M 110.12 99.6"/>
-              </g>
-              <g class="dice-hole">
-              <path fill="#cc0000" d="M 90.38 72.95 C 87.48 72.17 85.68 66.79 83.08 64.1 C 80.8 61.75 77.12 60.45 73.85 60.23 C 71.03 60.03 68.82 60.35 66.35 61.74 C 64.7 62.67 63.08 63.84 61.96 65.37 C 59.3 69.06 58.54 72.64 54.86 73.11 C 49.12 73.84 47.02 74.45 47.49 75.66 C 48.03 77.05 51.2 77.37 54.83 77.56 C 56.37 77.64 57.86 77.71 59.3 77.76 C 59.79 80.43 61.99 83.68 64.1 85.17 C 66.07 86.56 68.47 87.26 70.86 87.56 C 74.46 88.01 78.15 87.43 81.19 85.46 C 83.92 83.7 85.73 80.63 86.41 77.54 C 88.21 77.47 90.07 77.39 92 77.32 C 93.14 77.27 97.36 77.13 97.79 75.86 C 98.36 74.18 94.14 73.96 90.38 72.95 Z M 64.95 66.59 C 71.96 59.28 84.3 65.12 83.67 74.78 C 75.19 75.41 69.11 75.36 61.99 74.93 C 61.8 71.9 62.84 68.78 64.95 66.59 Z M 74.41 84.89 C 69.95 85.56 65.2 83.13 63.12 79.13 C 62.91 78.72 62.73 78.3 62.58 77.86 C 69.8 78.05 76.13 77.91 83.08 77.66 C 81.75 81.37 78.32 84.31 74.41 84.89 Z M 74.41 84.89"/>
-              <path fill="#000000" d="M 73.35 90.2 C 73.17 90.2 73 90.2 72.81 90.19 C 72.49 90.18 72.24 89.92 72.25 89.6 C 72.26 89.28 72.52 89.02 72.84 89.03 C 75.78 89.11 78.17 88.57 80.59 87.3 C 82.92 86.08 84.87 84.12 86.08 81.79 C 86.23 81.51 86.58 81.4 86.86 81.54 C 87.15 81.69 87.26 82.04 87.11 82.33 C 85.79 84.87 83.67 87 81.13 88.33 C 78.71 89.6 76.22 90.2 73.35 90.2 Z M 73.35 90.2"/>
-              <path fill="#000000" d="M 67.96 89.77 C 67.94 89.77 67.91 89.77 67.89 89.77 C 65.71 89.46 63.61 88.54 61.82 87.11 C 60.03 85.67 58.68 83.82 57.91 81.77 C 57.79 81.46 57.95 81.13 58.25 81.02 C 58.54 80.91 58.88 81.06 58.99 81.36 C 59.69 83.22 60.92 84.89 62.55 86.2 C 64.18 87.5 66.07 88.34 68.05 88.62 C 68.36 88.66 68.59 88.96 68.54 89.27 C 68.5 89.56 68.25 89.77 67.96 89.77 Z M 67.96 89.77"/>
-              <path fill="#000000" d="M 58.46 68.32 C 58.39 68.32 58.32 68.31 58.25 68.28 C 57.95 68.17 57.8 67.83 57.92 67.53 C 59.16 64.27 61.63 61.44 64.69 59.76 C 67.44 58.25 70.65 57.64 74.52 57.91 C 74.83 57.94 75.07 58.21 75.05 58.54 C 75.03 58.86 74.75 59.1 74.43 59.07 C 70.8 58.82 67.8 59.38 65.25 60.78 C 62.43 62.33 60.15 64.94 59 67.95 C 58.91 68.18 58.69 68.32 58.46 68.32 Z M 58.46 68.32"/>
-              <path fill="#000000" d="M 87.14 66.04 C 86.93 66.04 86.73 65.92 86.62 65.72 C 85.97 64.46 85.3 63.7 84.18 62.46 C 83.2 61.39 80.31 60 78.78 59.7 C 78.46 59.64 78.26 59.34 78.32 59.02 C 78.38 58.71 78.68 58.5 79 58.56 C 80.76 58.91 83.84 60.38 85.04 61.68 C 86.19 62.95 86.94 63.8 87.65 65.19 C 87.8 65.47 87.69 65.82 87.4 65.97 C 87.32 66.02 87.23 66.04 87.14 66.04 Z M 87.14 66.04"/>
-              <path fill="#000000" d="M 89.22 69.79 C 89.01 69.79 88.81 69.68 88.71 69.48 L 87.93 68.04 C 87.78 67.75 87.89 67.4 88.17 67.25 C 88.45 67.1 88.8 67.21 88.95 67.49 L 89.73 68.94 C 89.88 69.22 89.78 69.57 89.49 69.72 C 89.41 69.77 89.31 69.79 89.22 69.79 Z M 89.22 69.79"/>
-              </g>
-              <text class="dice-face-num" x="72.7" y="79" text-anchor="middle" dominant-baseline="central"></text>
-            </g>
-          </svg>
-        </button>
-
-        <!-- Caixa de resultados das rolagens (substitui a antiga posição de Defesa/Deslocamento) -->
-        <div class="roll-panel">
-          <div class="roll-result" id="rollResult">
-            <p class="roll-empty">Selecione um Atributo e uma Perícia e clique no dado.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-right">
-        <div class="status-tables">
-          <div class="status-block" id="statusBlock-saude">
-            <h3 class="status-heading">Saude</h3>
-            <div class="status-rows" data-group="saude"></div>
-          </div>
-          <div class="status-block" id="statusBlock-sanidade">
-            <h3 class="status-heading">Sanidade</h3>
-            <div class="status-rows" data-group="sanidade"></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Atributos -->
-    <h2 class="section-title">Atributos</h2>
-    <div class="attributes-grid" id="attributesGrid"></div>
-
-    <!-- Habilidades -->
-    <h2 class="section-title">Habilidades</h2>
-    <div class="skills-grid" id="skillsGrid"></div>
-
-  </section>
-
-  <!-- ======================= PÁGINA 2 ======================= -->
-  <section class="page" id="page2" aria-label="Ficha - Página 2">
-
-    <div class="p2-col-left">
-      <h3 class="subsection-title">Outras caracteristicas</h3>
-      <div class="blank-rows" id="outrasRows" data-rows="7"></div>
-
-      <h3 class="subsection-title">Antecedentes</h3>
-      <div class="blank-rows" id="antecedentesRows" data-rows="6"></div>
-
-      <h2 class="section-title-serif">Inventario</h2>
-      <table class="inventory-table" id="inventoryTable">
-        <thead>
-          <tr>
-            <th class="col-item">Item</th>
-            <th class="col-categoria">Categoria</th>
-            <th class="col-qtd">Qtd</th>
-            <th class="col-tamanho">Tamanho</th>
-            <th class="col-obs">Obs</th>
-          </tr>
-        </thead>
-        <tbody id="inventoryBody"></tbody>
-      </table>
-    </div>
-
-    <div class="p2-col-right">
-      <h2 class="section-title">Qualidades &amp; Defeitos</h2>
-
-      <div class="qd-table">
-        <div class="qd-headers">
-          <span class="qd-h-nome">Qualidades</span>
-          <span class="qd-h-tipo">Tipo</span>
-          <span class="qd-h-custo">Custo</span>
-        </div>
-        <div class="qd-rows" id="qualidadesRows" data-rows="4"></div>
-      </div>
-
-      <div class="qd-table">
-        <div class="qd-headers">
-          <span class="qd-h-nome">Defeitos</span>
-          <span class="qd-h-tipo">Tipo</span>
-          <span class="qd-h-custo">Custo</span>
-        </div>
-        <div class="qd-rows" id="defeitosRows" data-rows="4"></div>
-      </div>
-
-      <h3 class="subsection-title-serif">Armamento</h3>
-      <!-- Grade 2×2: 3 blocos de arma + o bloco de armadura, na mesma grade,
-           reproduzindo o alinhamento por linha do documento original. -->
-      <div class="weapons-grid" id="weaponsGrid"></div>
-    </div>
-
-    <div class="p2-bottom-left">
-      <h2 class="section-title-serif">Description</h2>
-      <div class="description-fields" id="descriptionFields"></div>
-    </div>
-
-    <div class="p2-bottom-right">
-      <button class="portrait-frame" id="portraitBtn-full" type="button" aria-label="Enviar retrato adicional" data-portrait="full">
-        <img class="portrait-img" id="portraitImg-full" alt="">
-      </button>
-      <input class="portrait-input" id="portraitInput-full" type="file" accept="image/*" hidden>
-    </div>
-
-    <div class="p2-notes">
-      <h2 class="section-title-serif">Anotações</h2>
-      <div class="notes-area" data-key="anotacoes" contenteditable="true"></div>
-    </div>
-
-  </section>
-
-  <!-- ======================= ANOTAÇÕES (abre pelo +) ======================= -->
-  <section class="page notes-page" id="notesPage" aria-label="Anotações">
-    <button class="notes-min no-print" id="notesMin" type="button" aria-label="Minimizar anotações">&minus;</button>
-    <textarea id="notesText" class="notes-text" data-key="notas-livres" spellcheck="false" aria-label="Anotações"></textarea>
-    <div class="notes-print" id="notesPrint" aria-hidden="true"></div>
-  </section>
-
-  <div class="notes-add-wrap no-print" id="notesAddWrap">
-    <button class="notes-add" id="notesAdd" type="button" aria-label="Abrir página de anotações">+</button>
-  </div>
-
-</div>
-
-<!-- Integração com a Artemis (Discord). Sem Firebase configurado, a ficha funciona como antes. -->
 <script src="firebase-config.js"></script>
-<script>
-  // Decide antes do script.js se a ficha vem do Firebase (link da Artemis) ou do navegador.
-  (function () {
-    var cfg = window.FIREBASE_CONFIG || {};
-    var configurado = cfg.apiKey && cfg.apiKey.indexOf('COLE_') !== 0;
-    var temLink = new URLSearchParams(location.search).has('f');
-    var vinculado = false;
-    try { vinculado = !!localStorage.getItem('artemis_vinculo'); } catch (e) {}
-    window.ARTEMIS_ONLINE = !!(configurado && (temLink || vinculado));
-  })();
-</script>
-<script src="script.js"></script>
-<script type="module" src="integracao.js"></script>
+<script src="site-config.js"></script>
+<script type="module" src="home.js"></script>
 </body>
 </html>

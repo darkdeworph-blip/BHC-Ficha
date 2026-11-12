@@ -1039,3 +1039,47 @@ input[type="text"].cfg-input:hover, input[type="text"].cfg-input:focus { backgro
 .cfg-btn:hover { background: #3a3a3a; }
 .cfg-msg { min-height: 1em; margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #9a9a9a; }
 .cfg-msg.erro { color: #e88; }
+
+/* ==========================================================================
+   BARRA DO TOPO — voltar ao início e alternador Mesa | Ficha (tela apenas)
+   ========================================================================== */
+.toolbar-back {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 33px; height: 33px; border: 1px solid #fff; border-radius: 6px; color: #fff; text-decoration: none;
+}
+.toolbar-back:hover { background: #3a3a3a; }
+.toolbar-title { font-family: 'Orbitron', var(--f-sans); letter-spacing: .04em; }
+.toolbar-seg {
+  display: inline-flex; padding: 3px; border: 1px solid #fff; border-radius: 999px; font-size: 13px; font-weight: 700;
+}
+.toolbar-seg a {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 84px; height: 30px; padding: 0 18px;
+  border-radius: 999px; color: #a6a6a6; text-decoration: none;
+}
+.toolbar-seg a.on { background: #cc0000; color: #fff; }
+@media (max-width: 760px) {
+  .toolbar { flex-wrap: wrap; justify-content: center; }
+  .toolbar-title { display: none; }
+  .toolbar-left { order: 1; }
+  .toolbar-actions { order: 2; flex-wrap: wrap; justify-content: center; }
+  .toolbar-seg { order: 3; width: 100%; }
+  .toolbar-seg a { flex: 1; height: 38px; }
+}
+
+/* Botão de iniciativa, logo abaixo da caixa de resultados (não sai no PDF) */
+.btn-iniciativa {
+  display: block;
+  margin: 3mm auto 0;
+  min-height: 9mm;
+  padding: 0 8mm;
+  border: .4mm solid #cc0000;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-text);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 3.4mm;
+  cursor: pointer;
+}
+.btn-iniciativa:hover { background: #cc0000; color: #fff; }
+@media print { .btn-iniciativa, .toolbar-seg, .toolbar-back { display: none !important; } }

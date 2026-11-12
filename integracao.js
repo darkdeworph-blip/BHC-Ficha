@@ -286,13 +286,16 @@ async function iniciar() {
   const consulta = new URLSearchParams(location.search);
   const fragmento = new URLSearchParams(location.hash.slice(1));
   const token = fragmento.get('t');
-  if (consulta.get('s') && consulta.get('f')) {
+  const temporario = consulta.get('temp') === '1'; // mestre só olhando a ficha de outra pessoa
+  if (consulta.get('s') && consulta.get('f') && !temporario) {
     gravarArmazenado(CHAVE_VINCULO, { s: consulta.get('s'), f: consulta.get('f') });
   }
   // Tira o token e os códigos da barra de endereço (não ficam no histórico nem em print)
   if (token || consulta.has('f')) history.replaceState(null, '', location.pathname);
 
-  const vinculo = lerArmazenado(CHAVE_VINCULO);
+  const vinculo = temporario && consulta.get('s') && consulta.get('f')
+    ? { s: consulta.get('s'), f: consulta.get('f') }
+    : lerArmazenado(CHAVE_VINCULO);
   if (!vinculo) return voltarAoModoLocal('');
 
   status('Conectando à Artemis...');
